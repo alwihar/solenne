@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOLENNE — 3D Artist &amp; Digital Sculptor</title>
+  <meta name="description" content="Solenne — 3D artist and digital sculptor. Worlds built from light, salt and code." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm",
+      "gsap/ScrollTrigger": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger/+esm"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- Preloader -->
+  <div class="preloader" id="preloader" aria-hidden="true">
+    <div class="preloader__ring"></div>
+    <p class="preloader__label">IGNITING <span id="preloader-count">0</span>%</p>
+  </div>
+
+  <!-- Fixed 3D stage -->
+  <div class="stage" id="stage">
+    <canvas id="scene" aria-hidden="true"></canvas>
+    <div class="stage__fallback" aria-hidden="true"></div>
+  </div>
+
+  <!-- Grain overlay -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Nav -->
+  <header class="nav">
+    <a class="nav__logo" href="#top" aria-label="Solenne — home">S<span>.</span></a>
+    <nav class="nav__links" aria-label="Main">
+      <a href="#works">WORKS</a>
+      <a href="#manifesto">ABOUT</a>
+      <a href="#contact">CONTACT</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- Hero -->
+    <section class="hero" id="hero">
+      <p class="hero__kicker">PORTFOLIO OF LIGHT — VOL. II</p>
+      <h1 class="visually-hidden">Solenne — 3D artist and digital sculptor</h1>
+      <p class="hero__tagline">3D artist &amp; digital sculptor —<br />worlds built from light, salt and code.</p>
+      <p class="hero__scroll-hint"><span></span>SCROLL</p>
+    </section>
+
+    <!-- Manifesto -->
+    <section class="manifesto" id="manifesto">
+      <p class="section-kicker">MANIFESTO</p>
+      <p class="manifesto__statement" data-reveal-words>
+        Every pixel is poured, not placed. I build slow, deliberate worlds
+        where light behaves like memory — and the sea never renders the same
+        frame twice.
+      </p>
+      <p class="manifesto__signature">— Solenne, somewhere near the horizon</p>
+    </section>
+
+    <!-- Works -->
+    <section class="works" id="works">
+      <div class="works__head">
+        <p class="section-kicker section-kicker--dark">SELECTED WORKS</p>
+        <h2 class="works__title" data-reveal-words>Four studies in melting light</h2>
+      </div>
+      <div class="works__grid" id="works-grid">
+        <!-- cards injected by js/ui/works.js -->
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="contact" id="contact">
+      <p class="section-kicker">COMMISSIONS</p>
+      <h2 class="contact__title" data-reveal-words>Commission a piece</h2>
+      <form class="contact__form" id="contact-form" novalidate>
+        <div class="field">
+          <label for="f-name">YOUR NAME</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" required />
+          <p class="field__error" data-error-for="name"></p>
+        </div>
+        <div class="field">
+          <label for="f-email">YOUR EMAIL</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" required />
+          <p class="field__error" data-error-for="email"></p>
+        </div>
+        <div class="field">
+          <label for="f-dream">WHAT DO YOU DREAM OF</label>
+          <textarea id="f-dream" name="dream" rows="3" required></textarea>
+          <p class="field__error" data-error-for="dream"></p>
+        </div>
+        <button class="contact__submit" type="submit">SEND IT →</button>
+        <p class="contact__note">I read everything myself — expect a reply within two days.</p>
+      </form>
+      <div class="contact__success" id="contact-success" hidden>
+        <p class="contact__success-big">Received.</p>
+        <p>Your dream is in the queue. Keep an eye on the horizon — and your inbox.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>© 2026 SOLENNE STUDIO</p>
+      <p class="footer__mid">SCULPTED BY HAND, RENDERED BY SUN</p>
+      <a href="#top">BACK TO THE SURFACE ↑</a>
+    </footer>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
