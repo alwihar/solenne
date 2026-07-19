@@ -60,13 +60,16 @@ export const createStage = async (canvas, { onProgress } = {}) => {
   );
   onProgress?.(1);
 
-  // Mouse parallax (lerped for weight).
-  const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
+  // Mouse parallax (lerped for weight) + velocity for pushing letters around.
+  const pointer = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, lastTx: 0 };
   const onPointerMove = (e) => {
     pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
     pointer.ty = (e.clientY / window.innerHeight) * 2 - 1;
   };
   window.addEventListener("pointermove", onPointerMove, { passive: true });
+
+  const raycaster = new THREE.Raycaster();
+  const pointerNdc = new THREE.Vector2();
 
   const onResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -88,6 +91,8 @@ export const createStage = async (canvas, { onProgress } = {}) => {
 
     pointer.x += (pointer.tx - pointer.x) * 0.045;
     pointer.y += (pointer.ty - pointer.y) * 0.045;
+    pointer.vx = pointer.tx - pointer.lastTx;
+    pointer.lastTx = pointer.tx;
 
     const p = scroll.progress;
     camera.position.x = CAMERA.position.x + pointer.x * 0.9;
@@ -98,6 +103,12 @@ export const createStage = async (canvas, { onProgress } = {}) => {
       CAMERA.lookAt.z,
     );
     camera.lookAt(lookTarget);
+
+    if (pointer.vx !== 0) {
+      pointerNdc.set(pointer.tx, -pointer.ty);
+      raycaster.setFromCamera(pointerNdc, camera);
+      letters.handleHover(raycaster, pointer.vx * 60); // ~per-second velocity
+    }
 
     sky.update(t, p);
     ocean.update(t);

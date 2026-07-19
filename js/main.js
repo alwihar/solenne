@@ -30,6 +30,11 @@ const bootScene = async (preloader) => {
 };
 
 const boot = () => {
+  // Always start at the top so the preloader + letter drop intro is seen;
+  // browser scroll restoration would otherwise jump mid-page after reload.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  window.scrollTo(0, 0);
+
   const preloader = createPreloader();
   initWordReveals();
   initWorks();
