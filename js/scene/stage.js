@@ -110,8 +110,11 @@ export const createStage = async (canvas, { onProgress } = {}) => {
       letters.handleHover(raycaster, pointer.vx * 60); // ~per-second velocity
     }
 
+    // Dusk falls with scroll: global exposure eases down as the sun sets.
+    renderer.toneMappingExposure = 1.05 - p * 0.38;
+
     sky.update(t, p);
-    ocean.update(t);
+    ocean.update(t, p);
     atmosphere.update(t);
     letters.update(t, p);
 

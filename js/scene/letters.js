@@ -6,9 +6,12 @@ import { PALETTE, LETTERS_TEXT, SCENE_LAYOUT, FONT_URL } from "../config.js";
 
 const LETTER_SIZE = 2.6;
 const LETTER_DEPTH = 0.7;
-const LETTER_GAP = 0.5;
-const MAX_WORD_SCALE = 1.6;
-const VIEWPORT_FILL = 0.86;
+const LETTER_GAP = 0.4;
+const MAX_WORD_SCALE = 1.85;
+const VIEWPORT_FILL = 0.92;
+
+const STRAND_COLOR = "#8d7ab0"; // muted lilac — visible but delicate on pale letters
+const STRAND_RADIUS = 0.012;
 
 // Pendulum feel: soft spring, light damping so pushes keep swinging a while.
 const PENDULUM_LENGTH = 2.2;
@@ -66,6 +69,48 @@ const buildLetterMeshes = (font, quality) => {
     const height = bb.max.y - bb.min.y;
     return { char, mesh, width, height };
   });
+};
+
+// Loose thread strands draped across a letter's face, like the reference
+// site — wavy path across the glyph with a drooping tail off one edge.
+const buildStrand = (width, height, depth) => {
+  const seed = Math.random() * 10;
+  const dir = Math.random() > 0.5 ? 1 : -1;
+  // Keep the whole strand clearly in front of the beveled face.
+  const z = depth / 2 + 0.18 + Math.random() * 0.06;
+  const yBase = (Math.random() - 0.5) * height * 0.5;
+
+  const across = 5;
+  const points = Array.from({ length: across + 1 }, (_, i) => {
+    const s = i / across;
+    const x = dir * (-width / 2 - 0.08 + s * (width + 0.22));
+    const y =
+      yBase +
+      Math.sin(s * 4.6 + seed) * 0.22 +
+      Math.sin(s * 10.1 + seed * 2.1) * 0.09;
+    return new THREE.Vector3(x, y, z + Math.sin(s * 7 + seed) * 0.025);
+  });
+  // Short drooping tail past the far edge.
+  const last = points[points.length - 1];
+  points.push(
+    new THREE.Vector3(last.x + dir * 0.18, last.y - 0.35, z),
+    new THREE.Vector3(
+      last.x + dir * 0.1,
+      last.y - 0.65 - Math.random() * 0.3,
+      z + 0.04,
+    ),
+  );
+
+  const curve = new THREE.CatmullRomCurve3(points);
+  const geometry = new THREE.TubeGeometry(curve, 32, STRAND_RADIUS, 5);
+  const material = new THREE.MeshBasicMaterial({
+    color: STRAND_COLOR,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.frustumCulled = false;
+  return mesh;
 };
 
 // Fisher–Yates over a copy: gives each letter a random drop slot.
@@ -148,6 +193,12 @@ export const createLetters = async (scene, quality, onProgress) => {
 
     entry.mesh.position.set(x, SCENE_LAYOUT.dropFromY, 0);
     group.add(entry.mesh);
+
+    // One thread strand per letter (occasionally two), parented to swing along.
+    const strandCount = 1 + (Math.random() < 0.3 ? 1 : 0);
+    for (let s = 0; s < strandCount; s += 1) {
+      entry.mesh.add(buildStrand(entry.width, entry.height, LETTER_DEPTH));
+    }
 
     const rope = createRopeMesh();
     group.add(rope);

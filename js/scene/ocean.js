@@ -24,6 +24,7 @@ const VERTEX = /* glsl */ `
 
 const FRAGMENT = /* glsl */ `
   uniform float uTime;
+  uniform float uDusk;
   uniform vec3 uDeep;
   uniform vec3 uHorizon;
   uniform vec3 uSunColor;
@@ -64,15 +65,20 @@ const FRAGMENT = /* glsl */ `
     float streak = exp(-(dx * dx) / (width * width * 0.5));
     float ripple = 0.55 + 0.45 * sin(vUv.y * 90.0 + uTime * 2.2 + vWave * 8.0)
                         * sin(vUv.x * 40.0 - uTime * 1.3);
-    col += uSunColor * streak * ripple * micro * mix(0.10, 1.35, pow(d, 1.4));
+    // The reflection path fades as the sun sets (uDusk follows scroll).
+    float sunlight = 1.0 - uDusk * 0.85;
+    col += uSunColor * streak * ripple * micro * mix(0.10, 1.35, pow(d, 1.4)) * sunlight;
 
     // Sparkle glints where ripples catch the sun path.
     float glint = pow(micro, 7.0) * streak * mix(0.3, 2.2, d);
-    col += uSunColor * glint;
+    col += uSunColor * glint * sunlight;
 
     // Wave shading + horizon haze blend.
     col += vWave * 0.04;
-    col = mix(col, uFogColor, smoothstep(0.86, 1.0, d) * 0.85);
+    col = mix(col, uFogColor, smoothstep(0.86, 1.0, d) * 0.85 * (1.0 - uDusk * 0.5));
+
+    // Night falls: pull the whole surface toward a cold indigo.
+    col = mix(col, vec3(0.07, 0.05, 0.14), uDusk * 0.55);
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -85,6 +91,7 @@ export const createOcean = (scene, quality) => {
 
   const uniforms = {
     uTime: { value: 0 },
+    uDusk: { value: 0 },
     uDeep: { value: new THREE.Color(PALETTE.waterDeep) },
     uHorizon: { value: new THREE.Color(PALETTE.waterHorizon) },
     uSunColor: { value: new THREE.Color(PALETTE.sunGlow) },
@@ -106,8 +113,9 @@ export const createOcean = (scene, quality) => {
   scene.add(mesh);
 
   return {
-    update: (t) => {
+    update: (t, scrollProgress = 0) => {
       uniforms.uTime.value = t;
+      uniforms.uDusk.value = scrollProgress;
     },
   };
 };

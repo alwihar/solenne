@@ -1,16 +1,16 @@
-import * as THREE from 'three';
-import { PALETTE, SCENE_LAYOUT } from '../config.js';
+import * as THREE from "three";
+import { PALETTE, SCENE_LAYOUT } from "../config.js";
 
 const makeGradientTexture = () => {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = 2;
   canvas.height = 512;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   const grad = ctx.createLinearGradient(0, 0, 0, 512);
   grad.addColorStop(0.0, PALETTE.skyTop);
   grad.addColorStop(0.52, PALETTE.skyMid);
   grad.addColorStop(0.78, PALETTE.skyHorizon);
-  grad.addColorStop(1.0, '#ffb98a');
+  grad.addColorStop(1.0, "#ffb98a");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 2, 512);
   const texture = new THREE.CanvasTexture(canvas);
@@ -20,20 +20,84 @@ const makeGradientTexture = () => {
 
 const makeGlowTexture = () => {
   const size = 256;
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, 'rgba(255, 214, 160, 0.85)');
-  grad.addColorStop(0.35, 'rgba(255, 148, 94, 0.35)');
-  grad.addColorStop(1, 'rgba(255, 122, 89, 0)');
+  const ctx = canvas.getContext("2d");
+  const grad = ctx.createRadialGradient(
+    size / 2,
+    size / 2,
+    0,
+    size / 2,
+    size / 2,
+    size / 2,
+  );
+  grad.addColorStop(0, "rgba(255, 214, 160, 0.85)");
+  grad.addColorStop(0.35, "rgba(255, 148, 94, 0.35)");
+  grad.addColorStop(1, "rgba(255, 122, 89, 0)");
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
   return new THREE.CanvasTexture(canvas);
 };
 
-// Gradient backdrop plane + sun disc + additive glow sprite.
+// Textured sun: bright core → warm limb, fbm granulation, drifting
+// horizontal atmosphere bands, soft edge.
+const SUN_FRAGMENT = /* glsl */ `
+  uniform float uTime;
+  varying vec2 vUv;
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+      mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+      f.y);
+  }
+  float fbm(vec2 p) {
+    return noise(p) * 0.6 + noise(p * 2.3 + 7.7) * 0.3 + noise(p * 5.1 + 19.3) * 0.1;
+  }
+
+  void main() {
+    vec2 c = (vUv - 0.5) * 2.0;
+    float r = length(c);
+
+    vec3 core = vec3(1.0, 0.97, 0.88);
+    vec3 limb = vec3(1.0, 0.72, 0.42);
+    vec3 edge = vec3(1.0, 0.55, 0.34);
+    vec3 col = mix(core, limb, smoothstep(0.15, 0.85, r));
+    col = mix(col, edge, smoothstep(0.8, 1.0, r));
+
+    // Surface granulation, drifting slowly.
+    float grain = fbm(vUv * 7.0 + vec2(uTime * 0.02, uTime * 0.013));
+    col *= 0.92 + grain * 0.14;
+
+    // Horizontal atmosphere bands, heavier toward the lower half.
+    float band = sin(vUv.y * 30.0 + fbm(vUv * 3.0) * 4.0 - uTime * 0.06);
+    float bandMask = (band * 0.5 + 0.5) * smoothstep(0.8, 0.12, vUv.y);
+    col *= 1.0 - bandMask * 0.22;
+
+    float alpha = 1.0 - smoothstep(0.92, 1.0, r);
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+const SUN_VERTEX = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// How far the sun travels down as you scroll: fully below the sea at p=1.
+const SUNSET_TRAVEL = SCENE_LAYOUT.sunY + SCENE_LAYOUT.sunRadius + 1.5;
+
+// Gradient backdrop + textured sun disc + additive glow + dusk overlay.
 export const createSky = (scene) => {
   const backdrop = new THREE.Mesh(
     new THREE.PlaneGeometry(560, 240),
@@ -42,34 +106,62 @@ export const createSky = (scene) => {
   backdrop.position.set(0, 58, SCENE_LAYOUT.horizonZ - 60);
   scene.add(backdrop);
 
+  // Darkens the sky as the sun sets (driven by scroll).
+  const dusk = new THREE.Mesh(
+    new THREE.PlaneGeometry(560, 240),
+    new THREE.MeshBasicMaterial({
+      color: "#0a0620",
+      transparent: true,
+      opacity: 0,
+      fog: false,
+      depthWrite: false,
+    }),
+  );
+  dusk.position.set(0, 58, SCENE_LAYOUT.horizonZ - 59);
+  scene.add(dusk);
+
+  const sunUniforms = { uTime: { value: 0 } };
   const sun = new THREE.Mesh(
-    new THREE.CircleGeometry(SCENE_LAYOUT.sunRadius, 48),
-    new THREE.MeshBasicMaterial({ color: PALETTE.sunCore, fog: false }),
+    new THREE.CircleGeometry(SCENE_LAYOUT.sunRadius, 64),
+    new THREE.ShaderMaterial({
+      uniforms: sunUniforms,
+      vertexShader: SUN_VERTEX,
+      fragmentShader: SUN_FRAGMENT,
+      transparent: true,
+      fog: false,
+    }),
   );
   sun.position.set(0, SCENE_LAYOUT.sunY, SCENE_LAYOUT.horizonZ);
   scene.add(sun);
 
-  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: makeGlowTexture(),
-    color: PALETTE.sunGlow,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    fog: false,
-  }));
+  const glow = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: makeGlowTexture(),
+      color: PALETTE.sunGlow,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      fog: false,
+    }),
+  );
   glow.scale.setScalar(SCENE_LAYOUT.sunRadius * 7);
   glow.position.copy(sun.position);
   glow.position.z += 1;
   scene.add(glow);
 
-  const baseSunY = SCENE_LAYOUT.sunY;
   return {
     update: (t, scrollProgress = 0) => {
-      // The sun slowly sinks as you scroll away from the hero.
-      const y = baseSunY - scrollProgress * 2.4;
+      const p = scrollProgress;
+      sunUniforms.uTime.value = t;
+
+      // The sun slides into the sea as you scroll; its glow fades with it.
+      const y = SCENE_LAYOUT.sunY - p * SUNSET_TRAVEL;
       sun.position.y = y;
-      glow.position.y = y;
+      glow.position.y = Math.max(y, 0.4);
+      glow.material.opacity = 1 - p * 0.8;
+      dusk.material.opacity = p * 0.5;
+
       const pulse = 1 + Math.sin(t * 0.6) * 0.02;
-      glow.scale.setScalar(SCENE_LAYOUT.sunRadius * 7 * pulse);
+      glow.scale.setScalar(SCENE_LAYOUT.sunRadius * 7 * pulse * (1 - p * 0.35));
     },
   };
 };
