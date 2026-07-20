@@ -276,6 +276,9 @@ export const createLetters = async (scene, quality, onProgress) => {
         dropY: SCENE_LAYOUT.dropFromY * (0.75 + Math.random() * 0.7),
         theta: 0, // pendulum angle, integrated manually
         thetaVel: 0,
+        yank: 0, // extra y offset from click dip animation
+        spin: 0, // extra Y-rotation from click spin animation
+        spinTarget: 0, // accumulated spin target (not animated by gsap directly)
       },
     };
   });
@@ -322,6 +325,66 @@ export const createLetters = async (scene, quality, onProgress) => {
     group.scale.setScalar(scale);
   };
 
+  // Resolve a raycaster hit (recursive, for strand children) to a top-level
+  // letter object, or null if the hit belongs to a rope or nothing.
+  const letterFromHit = (hit) => {
+    // Direct hit on a letter mesh.
+    const direct = letters.find((l) => l.mesh === hit.object);
+    if (direct) return direct;
+    // Hit on a child strand — walk up to the parent letter mesh.
+    const byParent = letters.find((l) => l.mesh === hit.object.parent);
+    return byParent ?? null;
+  };
+
+  // Click handler: yank the letter down then spring it back, add a full spin,
+  // and kick the pendulum. Returns true when a letter was hit.
+  const handleClick = (raycaster) => {
+    if (!played) return false;
+    const hits = raycaster.intersectObjects(
+      letters.map((l) => l.mesh),
+      true, // recursive — also tests strand children
+    );
+    if (hits.length === 0) return false;
+    const letter = letterFromHit(hits[0]);
+    if (!letter) return false;
+    const { state } = letter;
+
+    // Yank: kill existing yank tween, dip down then elastic return.
+    gsap.killTweensOf(state, "yank");
+    gsap.to(state, { yank: -0.85, duration: 0.14, ease: "power2.out" });
+    gsap.to(state, {
+      yank: 0,
+      duration: 1.6,
+      delay: 0.14,
+      ease: "elastic.out(1, 0.3)",
+    });
+
+    // Spin: accumulate a full turn and tween spin toward the new target.
+    gsap.killTweensOf(state, "spin");
+    state.spinTarget += Math.PI * 2;
+    gsap.to(state, {
+      spin: state.spinTarget,
+      duration: 1.4,
+      ease: "back.out(1.4)",
+      overwrite: false,
+    });
+
+    // Small random swing kick for tactile feel.
+    state.thetaVel += (Math.random() - 0.5) * 1.2;
+
+    return true;
+  };
+
+  // Returns true if the ray is over any letter (or its child strands).
+  // Used by stage.js to set the pointer cursor cheaply inside the hover block.
+  const hitTest = (raycaster) => {
+    const hits = raycaster.intersectObjects(
+      letters.map((l) => l.mesh),
+      true,
+    );
+    return hits.length > 0 && letterFromHit(hits[0]) !== null;
+  };
+
   // Called by the stage with a raycaster; a hovered letter gets pushed
   // sideways in the direction the pointer is moving.
   const handleHover = (raycaster, pointerVelX) => {
@@ -360,14 +423,16 @@ export const createLetters = async (scene, quality, onProgress) => {
       const bob = settled ? Math.sin(t * 0.9 + letter.phase) * 0.06 : 0;
       const lift = progress.lift * (SCENE_LAYOUT.liftToY + i * 0.7);
 
-      const y = state.dropY + bob + lift;
+      const y = state.dropY + bob + lift + state.yank;
       const xOff = Math.sin(state.theta) * PENDULUM_LENGTH * 0.42;
 
       letter.mesh.position.x = letter.x + xOff;
       letter.mesh.position.y = y;
       letter.mesh.rotation.z = state.theta * ROTATION_FACTOR;
       letter.mesh.rotation.y =
-        state.theta * 0.25 + Math.sin(t * 0.4 + letter.phase * 1.3) * 0.05;
+        state.theta * 0.25 +
+        Math.sin(t * 0.4 + letter.phase * 1.3) * 0.05 +
+        state.spin;
 
       updateRope(
         letter.rope,
@@ -381,5 +446,13 @@ export const createLetters = async (scene, quality, onProgress) => {
     });
   };
 
-  return { play, settle, update, fitToViewport, handleHover };
+  return {
+    play,
+    settle,
+    update,
+    fitToViewport,
+    handleHover,
+    handleClick,
+    hitTest,
+  };
 };

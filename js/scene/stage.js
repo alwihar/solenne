@@ -70,6 +70,17 @@ export const createStage = async (canvas, { onProgress } = {}) => {
 
   const raycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
+  const clickNdc = new THREE.Vector2();
+
+  const onPointerDown = (e) => {
+    clickNdc.set(
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -((e.clientY / window.innerHeight) * 2 - 1),
+    );
+    raycaster.setFromCamera(clickNdc, camera);
+    letters.handleClick(raycaster);
+  };
+  window.addEventListener("pointerdown", onPointerDown, { passive: true });
 
   const onResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -108,6 +119,8 @@ export const createStage = async (canvas, { onProgress } = {}) => {
       pointerNdc.set(pointer.tx, -pointer.ty);
       raycaster.setFromCamera(pointerNdc, camera);
       letters.handleHover(raycaster, pointer.vx * 60); // ~per-second velocity
+      const hit = letters.hitTest(raycaster);
+      renderer.domElement.style.cursor = hit ? "pointer" : "";
     }
 
     // Dusk falls with scroll: global exposure eases down as the sun sets.
@@ -132,6 +145,7 @@ export const createStage = async (canvas, { onProgress } = {}) => {
     dispose: () => {
       running = false;
       window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
     },
