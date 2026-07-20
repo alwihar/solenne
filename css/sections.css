@@ -72,9 +72,8 @@
 
 .works__head { margin-bottom: clamp(24px, 4vh, 48px); }
 
-/* Giant uppercase headline — dark-on-color like the reference, but in the
- * same light optical weight as the contact display so both giant titles
- * read as one voice; scale and case set them apart instead. */
+/* Giant uppercase headline — same light weight and coral→amber gradient as
+ * the contact display, so both giant titles read as one voice. */
 .works__display {
   font-family: var(--font-display);
   font-weight: 400;
@@ -82,7 +81,15 @@
   font-size: clamp(90px, 16vw, 240px);
   line-height: 0.9;
   letter-spacing: 0.01em;
-  color: #0d0930;
+  color: rgba(255, 246, 236, 0.85); /* Firefox / no-support fallback */
+}
+@supports (-webkit-background-clip: text) {
+  .works__display {
+    background: linear-gradient(135deg, var(--coral) 0%, var(--amber) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 /* ---------- decorative technical annotations ---------- */
