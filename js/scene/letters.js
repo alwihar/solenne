@@ -75,25 +75,52 @@ const buildLetterMeshes = (font, quality) => {
 // at the rope's attachment point on the letter top (0, height/2-0.06, 0),
 // arcs over the top-front corner onto the face, then drapes in a lazy S-curve
 // and ends in a short drooping tail near one side/bottom edge.
-const buildStrand = (width, height, depth) => {
+//
+// opts.dir — optional forced drape direction: 1 (right) or -1 (left).
+//            When omitted a random direction is chosen.
+const buildStrand = (width, height, depth, opts = {}) => {
   const seed = Math.random() * 10;
   // Direction the strand drapes across the face: left (-1) or right (+1).
-  const dir = Math.random() > 0.5 ? 1 : -1;
-  // How far down the face the mid-section wanders (randomised per strand).
-  const yDrop = 0.3 + Math.random() * 0.5;
+  const dir = opts.dir !== undefined ? opts.dir : Math.random() > 0.5 ? 1 : -1;
+
   // Z of points lying on the front face, clearing the bevel.
   const faceZ = depth / 2 + 0.15;
 
   // Attachment point on the letter top in letter-local space.
   const attachY = height / 2 - 0.06;
 
+  // Clamping bounds for on-face (S-curve) points.
+  const xMin = -width / 2 + 0.1;
+  const xMax = width / 2 - 0.1;
+  const yMin = -height / 2 + 0.15; // lowest allowed on-face y
+  // yMax for face is attachY (the top attachment), enforced naturally.
+
+  // Scale yDrop so the S-curve's lowest on-face point lands near mid-face
+  // (y ≈ 0 ± ~0.3). Derivation: point 5 sits at attachY - yDrop*2.1, so
+  // yDrop = attachY/2.1 keeps point 5 right at y=0. A ±15% random jitter
+  // adds variety without pushing the strand below the glyph.
+  const yDropBase = attachY / 2.1;
+  const yDrop = yDropBase * (0.85 + Math.random() * 0.3);
+
+  // x at which the curve starts arcing (slight offset toward the drape side).
+  const xStart = THREE.MathUtils.clamp(dir * width * 0.1, xMin, xMax);
+  // x where the last on-face point sits — close to but not past the edge.
+  const xFaceEnd = THREE.MathUtils.clamp(dir * (width * 0.42), xMin, xMax);
+  // The tail is allowed to exit the glyph by at most 0.15 in x.
+  const xTailExit = dir * (width / 2 + 0.08);
+
+  // Helper: clamp a candidate x to on-face bounds.
+  const cx = (x) => THREE.MathUtils.clamp(x, xMin, xMax);
+  // Helper: clamp a candidate y to on-face bounds.
+  const cy = (y) => THREE.MathUtils.clamp(y, yMin, attachY);
+
   // Point 0: at the rope attachment, still on the letter top face (z ~ 0).
   // Point 1: just above the top-front corner — x nudged toward drape side,
   //           z starting to move forward.
   // Points 2-5: on the front face, sweeping across and downward in an S.
-  // Points 6-7: drooping tail past the far edge / bottom.
-  const xStart = dir * (width * 0.1); // slight offset so tail exits one side
-  const xEnd = dir * (width / 2 + 0.05); // ends near the far edge
+  // Points 6-7: drooping tail — exits glyph by at most 0.15 in x, droops
+  //             at most 0.45 below the exit y.
+  const exitY = cy(attachY - yDrop * 2.1 + Math.sin(seed * 0.9) * 0.06);
 
   const points = [
     // 0 — rope attachment (top surface, z≈0)
@@ -102,34 +129,30 @@ const buildStrand = (width, height, depth) => {
     new THREE.Vector3(xStart * 0.4, attachY - 0.04, faceZ * 0.55),
     // 2 — arrive on the face just below the top edge
     new THREE.Vector3(
-      xStart * 0.7,
-      attachY - 0.15 + Math.sin(seed) * 0.08,
+      cx(xStart * 0.7),
+      cy(attachY - 0.14 + Math.sin(seed) * 0.06),
       faceZ,
     ),
     // 3 — mid-face, S inflection point (drifts toward the far side)
     new THREE.Vector3(
-      dir * (width * 0.2) + Math.sin(seed * 1.7) * 0.15,
-      attachY - yDrop + Math.sin(seed * 2.3) * 0.12,
+      cx(dir * width * 0.18 + Math.sin(seed * 1.7) * 0.1),
+      cy(attachY - yDrop + Math.sin(seed * 2.3) * 0.1),
       faceZ + Math.sin(seed * 3.1) * 0.03,
     ),
     // 4 — lower on the face, S curve continues toward the far side
     new THREE.Vector3(
-      dir * (width * 0.38) + Math.sin(seed * 2.9) * 0.1,
-      attachY - yDrop * 1.6 + Math.sin(seed * 1.1) * 0.1,
+      cx(dir * width * 0.32 + Math.sin(seed * 2.9) * 0.08),
+      cy(attachY - yDrop * 1.6 + Math.sin(seed * 1.1) * 0.08),
       faceZ + Math.sin(seed * 4.3) * 0.03,
     ),
-    // 5 — reaching toward the far edge
+    // 5 — reaching toward the far edge (still on face)
+    new THREE.Vector3(xFaceEnd, exitY, faceZ),
+    // 6 — tail begins just past the side edge, starts drooping
+    new THREE.Vector3(xTailExit, exitY - 0.08, faceZ),
+    // 7 — tail end; droops at most 0.45 below exit point
     new THREE.Vector3(
-      xEnd - dir * 0.06,
-      attachY - yDrop * 2.1 + Math.sin(seed * 0.9) * 0.08,
-      faceZ,
-    ),
-    // 6 — tail begins past the side edge, starts drooping
-    new THREE.Vector3(xEnd + dir * 0.18, attachY - yDrop * 2.4, faceZ),
-    // 7 — tail end, drooping down; kept within ~0.7 units of glyph bounds
-    new THREE.Vector3(
-      xEnd + dir * 0.1,
-      attachY - yDrop * 2.4 - 0.45 - Math.random() * 0.25,
+      xTailExit - dir * 0.06,
+      exitY - 0.15 - Math.random() * 0.3,
       faceZ + 0.04,
     ),
   ];
@@ -226,8 +249,19 @@ export const createLetters = async (scene, quality, onProgress) => {
     entry.mesh.position.set(x, SCENE_LAYOUT.dropFromY, 0);
     group.add(entry.mesh);
 
-    // Exactly one thread strand per letter, parented to swing along.
-    entry.mesh.add(buildStrand(entry.width, entry.height, LETTER_DEPTH));
+    // Every letter gets one strand; ~45% chance of a second that drapes the
+    // opposite direction so the two don't overlap.
+    const firstDir = Math.random() > 0.5 ? 1 : -1;
+    entry.mesh.add(
+      buildStrand(entry.width, entry.height, LETTER_DEPTH, { dir: firstDir }),
+    );
+    if (Math.random() < 0.45) {
+      entry.mesh.add(
+        buildStrand(entry.width, entry.height, LETTER_DEPTH, {
+          dir: -firstDir,
+        }),
+      );
+    }
 
     const rope = createRopeMesh();
     group.add(rope);
