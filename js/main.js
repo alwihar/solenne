@@ -3,7 +3,6 @@ import { initWordReveals } from "./ui/reveal.js";
 import { initWorks } from "./ui/works.js";
 import { initAbout } from "./ui/about.js";
 import { initContactForm } from "./ui/form.js";
-import { initCursorLight } from "./ui/cursorlight.js";
 import { initFluid } from "./ui/fluid.js";
 import { prefersReducedMotion } from "./config.js";
 
@@ -43,7 +42,6 @@ const boot = () => {
   initWorks();
   initAbout();
   initContactForm();
-  initCursorLight();
   initFluid();
   bootScene(preloader);
 };

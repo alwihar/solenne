@@ -11,8 +11,10 @@ const VELOCITY_DISSIPATION = 0.985;
 const CURL = 28;
 const PRESSURE = 0.8;
 const SPLAT_RADIUS = 0.25 / 100;
-const SPLAT_FORCE = 6000;
-const DYE_INTENSITY = 0.28;
+// Low force keeps the dye attached to the pointer instead of shooting ahead.
+const SPLAT_FORCE = 1400;
+// High intensity so the difference blend reads as a clear "negative" zone.
+const DYE_INTENSITY = 0.6;
 const IDLE_TIMEOUT = 900; // ms without movement before we let dye settle
 
 // Warm fire palette (coral / amber / rose) matching the site.
@@ -469,6 +471,9 @@ export const initFluid = () => {
     const pointer = {
       x: 0,
       y: 0,
+      px: 0, // previous frame position, for path-interpolated splats
+      py: 0,
+      first: true,
       dx: 0,
       dy: 0,
       moved: false,
@@ -605,7 +610,30 @@ export const initFluid = () => {
           g: color.g * DYE_INTENSITY,
           b: color.b * DYE_INTENSITY,
         };
-        splat(pointer.x, pointer.y, pointer.dx, pointer.dy, c);
+        // Interpolate splats along the path travelled since the last frame so
+        // the dye hugs the pointer instead of appearing at sparse points.
+        const steps = Math.min(
+          8,
+          Math.max(
+            1,
+            Math.ceil(
+              Math.hypot(pointer.x - pointer.px, pointer.y - pointer.py) /
+                0.012,
+            ),
+          ),
+        );
+        for (let i = 1; i <= steps; i += 1) {
+          const t = i / steps;
+          splat(
+            pointer.px + (pointer.x - pointer.px) * t,
+            pointer.py + (pointer.y - pointer.py) * t,
+            pointer.dx / steps,
+            pointer.dy / steps,
+            c,
+          );
+        }
+        pointer.px = pointer.x;
+        pointer.py = pointer.y;
         pointer.dx = 0;
         pointer.dy = 0;
         hasActivity = true;
@@ -631,6 +659,14 @@ export const initFluid = () => {
       (e) => {
         const x = e.clientX / window.innerWidth;
         const y = 1 - e.clientY / window.innerHeight;
+        if (pointer.first) {
+          // No streak from (0,0) on the very first event.
+          pointer.px = x;
+          pointer.py = y;
+          pointer.x = x;
+          pointer.y = y;
+          pointer.first = false;
+        }
         const dx = (x - pointer.x) * SPLAT_FORCE;
         const dy = (y - pointer.y) * SPLAT_FORCE;
         pointer.x = x;
