@@ -418,7 +418,14 @@ export const initFluid = () => {
     let pressure;
 
     const initFramebuffers = () => {
-      dye = createDoubleFBO(DYE_RES, DYE_RES, rgba, rgba, textureType, filtering);
+      dye = createDoubleFBO(
+        DYE_RES,
+        DYE_RES,
+        rgba,
+        rgba,
+        textureType,
+        filtering,
+      );
       velocity = createDoubleFBO(
         SIM_RES,
         SIM_RES,
@@ -475,7 +482,12 @@ export const initFluid = () => {
       const p = programs.splat;
       gl.useProgram(p.program);
       gl.uniform1i(p.uniforms.uTarget, velocity.read.attach(0));
-      gl.uniform1f(p.uniforms.aspectRatio, canvas.width / canvas.height);
+      // Use CSS viewport dimensions for aspect ratio so the splat shape matches
+      // the visible canvas regardless of devicePixelRatio scaling.
+      gl.uniform1f(
+        p.uniforms.aspectRatio,
+        window.innerWidth / window.innerHeight,
+      );
       gl.uniform2f(p.uniforms.point, x, y);
       gl.uniform3f(p.uniforms.color, dx, dy, 0);
       gl.uniform1f(p.uniforms.radius, SPLAT_RADIUS);

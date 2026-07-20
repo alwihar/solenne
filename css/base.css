@@ -88,6 +88,27 @@ body.lb-open { overflow: hidden; }
   pointer-events: none;
   mix-blend-mode: screen; /* dye reads as light over hero and dark DOM alike */
 }
+.cursor-blob {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  filter: blur(1px);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  will-change: transform, width, height;
+  transition:
+    width 0.3s ease,
+    height 0.3s ease;
+}
+.cursor-blob--active {
+  width: 48px;
+  height: 48px;
+}
 .cursor-ring {
   position: fixed;
   top: 0;
@@ -98,13 +119,19 @@ body.lb-open { overflow: hidden; }
   border: 1.5px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
   mix-blend-mode: difference;
+  opacity: 0.6;
   pointer-events: none;
   will-change: transform, width, height;
-  transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
+  transition:
+    width 0.25s ease,
+    height 0.25s ease,
+    border-color 0.25s ease,
+    opacity 0.25s ease;
 }
 .cursor-ring--active {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
+  opacity: 1;
 }
 .cursor-dot {
   position: fixed;

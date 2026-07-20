@@ -133,6 +133,7 @@ export const createStage = async (canvas, { onProgress } = {}) => {
       letters.handleHover(raycaster, pointer.vx * 60); // ~per-second velocity
       const hit = letters.hitTest(raycaster);
       renderer.domElement.style.cursor = hit ? "pointer" : "";
+      document.body.classList.toggle("is-over-letter", hit);
     }
 
     // Dusk falls with scroll: global exposure eases down as the sun sets.
