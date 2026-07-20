@@ -83,30 +83,21 @@
 
     <!-- Contact -->
     <section class="contact" id="contact">
-      <p class="section-kicker">COMMISSIONS</p>
-      <h2 class="contact__title" data-reveal-words>Commission a piece</h2>
-      <form class="contact__form" id="contact-form" novalidate>
-        <div class="field">
-          <label for="f-name">YOUR NAME</label>
-          <input id="f-name" name="name" type="text" autocomplete="name" required />
-          <p class="field__error" data-error-for="name"></p>
+      <p class="section-kicker">COMMISSIONS — OPEN FOR AUTUMN 2026</p>
+      <div class="contact__layout">
+        <h2 class="contact__display" data-reveal-words>Commission a piece</h2>
+        <div class="contact__info">
+          <div class="contact__email-row">
+            <a class="contact__email" href="mailto:hello@solenne.studio">hello@solenne.studio</a>
+            <button class="contact__copy" id="copy-email" type="button" aria-label="Copy email address">COPY</button>
+          </div>
+          <nav class="contact__socials" aria-label="Social links">
+            <a href="#" rel="noopener noreferrer" target="_blank">INSTAGRAM ↗</a>
+            <a href="#" rel="noopener noreferrer" target="_blank">BEHANCE ↗</a>
+            <a href="#" rel="noopener noreferrer" target="_blank">ARTSTATION ↗</a>
+          </nav>
+          <p class="contact__note">I read everything myself — expect a reply within two days.</p>
         </div>
-        <div class="field">
-          <label for="f-email">YOUR EMAIL</label>
-          <input id="f-email" name="email" type="email" autocomplete="email" required />
-          <p class="field__error" data-error-for="email"></p>
-        </div>
-        <div class="field">
-          <label for="f-dream">WHAT DO YOU DREAM OF</label>
-          <textarea id="f-dream" name="dream" rows="3" required></textarea>
-          <p class="field__error" data-error-for="dream"></p>
-        </div>
-        <button class="contact__submit" type="submit">SEND IT →</button>
-        <p class="contact__note">I read everything myself — expect a reply within two days.</p>
-      </form>
-      <div class="contact__success" id="contact-success" hidden>
-        <p class="contact__success-big">Received.</p>
-        <p>Your dream is in the queue. Keep an eye on the horizon — and your inbox.</p>
       </div>
     </section>
 

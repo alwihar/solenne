@@ -25,6 +25,21 @@ const ROPE_COLOR = "#2b1746";
 const STRAND_COLOR = ROPE_COLOR; // continuation of the hanging rope
 const STRAND_RADIUS = ROPE_WIDTH / 2; // 0.0275 — tube diameter matches rope ribbon width
 
+// Drape directions for each letter of "SOLENNE" (indexes 0-6).
+// Inner arrays list the dir (+1 right, -1 left) for each strand on that letter.
+// "L" (index 2) gets one left-draping strand only — nothing floats in the empty
+// right side of the glyph.  "O" and "E" (indexes 1, 3) each include a
+// left-draping strand.  All other letters get one or two strands.
+const STRAND_PLAN = [
+  [1], // 0 S  — single right
+  [-1, 1], // 1 O  — left then right
+  [-1], // 2 L  — single left (open right side stays clear)
+  [-1], // 3 E  — single left
+  [1], // 4 N  — single right
+  [-1, 1], // 5 N  — left then right
+  [1, -1], // 6 E  — right then left
+];
+
 const loadFont = (onProgress) =>
   new Promise((resolve, reject) => {
     new FontLoader().load(
@@ -249,19 +264,16 @@ export const createLetters = async (scene, quality, onProgress) => {
     entry.mesh.position.set(x, SCENE_LAYOUT.dropFromY, 0);
     group.add(entry.mesh);
 
-    // Every letter gets one strand; ~45% chance of a second that drapes the
-    // opposite direction so the two don't overlap.
-    const firstDir = Math.random() > 0.5 ? 1 : -1;
-    entry.mesh.add(
-      buildStrand(entry.width, entry.height, LETTER_DEPTH, { dir: firstDir }),
-    );
-    if (Math.random() < 0.45) {
+    // Use the deterministic per-letter strand plan (falls back to [1] if the
+    // word is ever longer than STRAND_PLAN).  Shape randomness (seed, yDrop,
+    // etc.) is still handled inside buildStrand — only count and direction are
+    // fixed here.
+    const dirs = STRAND_PLAN[i] ?? [1];
+    dirs.forEach((dir) => {
       entry.mesh.add(
-        buildStrand(entry.width, entry.height, LETTER_DEPTH, {
-          dir: -firstDir,
-        }),
+        buildStrand(entry.width, entry.height, LETTER_DEPTH, { dir }),
       );
-    }
+    });
 
     const rope = createRopeMesh();
     group.add(rope);
@@ -287,25 +299,36 @@ export const createLetters = async (scene, quality, onProgress) => {
 
   const progress = { lift: 0 }; // 0 = resting, 1 = hoisted out of frame
   let played = false;
+  let reducedMotion = false; // set true by settle(); disables re-drop on scroll
   let lastT = 0;
+
+  // Randomise a single letter's swing state and start its drop tween.
+  // Extracted so play() and the re-drop path share identical logic.
+  const dropLetter = (letter) => {
+    const { state } = letter;
+    state.dropY = SCENE_LAYOUT.dropFromY * (0.75 + Math.random() * 0.7);
+    state.yank = 0;
+    state.spin = 0;
+    state.spinTarget = 0;
+    state.theta = (Math.random() - 0.5) * 0.5;
+    state.thetaVel = (Math.random() - 0.5) * 1.6;
+    const delay = 0.05 + letter.dropSlot * 0.14 + Math.random() * 0.4;
+    gsap.to(state, {
+      dropY: 0,
+      duration: 1.5 + Math.random() * 0.8,
+      delay,
+      ease: "elastic.out(1, 0.55)",
+    });
+  };
 
   const play = () => {
     if (played) return;
     played = true;
-    letters.forEach((letter) => {
-      const delay = 0.05 + letter.dropSlot * 0.14 + Math.random() * 0.4;
-      letter.state.theta = (Math.random() - 0.5) * 0.5;
-      letter.state.thetaVel = (Math.random() - 0.5) * 1.6;
-      gsap.to(letter.state, {
-        dropY: 0,
-        duration: 1.5 + Math.random() * 0.8,
-        delay,
-        ease: "elastic.out(1, 0.55)",
-      });
-    });
+    letters.forEach(dropLetter);
   };
 
   const settle = () => {
+    reducedMotion = true;
     played = true;
     letters.forEach((letter) => {
       Object.assign(letter.state, { dropY: 0, theta: 0, thetaVel: 0 });
@@ -407,7 +430,24 @@ export const createLetters = async (scene, quality, onProgress) => {
   const update = (t, scrollProgress) => {
     const dt = Math.min(Math.max(t - lastT, 0), 0.05);
     lastT = t;
-    progress.lift += ((scrollProgress > 0.02 ? 1 : 0) - progress.lift) * 0.04;
+
+    // Re-drop when the user scrolls back to the top after a full hoist —
+    // unless reduced-motion settle() was used (that path skips re-drop).
+    if (
+      !reducedMotion &&
+      progress.lift > 0.9 &&
+      scrollProgress < 0.02 &&
+      played
+    ) {
+      progress.lift = 0;
+      played = false;
+      letters.forEach((letter) => {
+        gsap.killTweensOf(letter.state);
+      });
+      play();
+    } else {
+      progress.lift += ((scrollProgress > 0.02 ? 1 : 0) - progress.lift) * 0.04;
+    }
 
     letters.forEach((letter, i) => {
       const { state } = letter;
