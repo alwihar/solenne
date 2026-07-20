@@ -80,40 +80,44 @@ body.lb-open { overflow: hidden; }
   100% { transform: translate(0, 0); }
 }
 
-/* ---------- cursor blob ---------- */
-.cursor-blob {
+/* ---------- fluid trail + ring cursor ---------- */
+.fluid-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  mix-blend-mode: screen; /* dye reads as light over hero and dark DOM alike */
+}
+.cursor-ring {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 60; /* above nav (50) and grain (40) so difference blend hits everything */
-  width: 120px;
-  height: 120px;
-  margin: -60px 0 0 -60px;
+  z-index: 70;
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
   mix-blend-mode: difference;
-  filter: blur(1px);
+  pointer-events: none;
+  will-change: transform, width, height;
+  transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease;
+}
+.cursor-ring--active {
+  width: 48px;
+  height: 48px;
+}
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 70;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  mix-blend-mode: difference;
   pointer-events: none;
   will-change: transform;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: width 0.25s ease, height 0.25s ease, margin 0.25s ease;
-}
-.cursor-blob__glyph {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: #fff;
-  line-height: 1;
-  /* Counter-rotate so the glyph stays upright during blob squash. */
-  display: block;
-  pointer-events: none;
-  user-select: none;
-}
-.cursor-blob--active {
-  width: 64px;
-  height: 64px;
-  margin: -32px 0 0 -32px;
 }
 
 /* ---------- nav ---------- */

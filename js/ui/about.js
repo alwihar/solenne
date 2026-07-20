@@ -24,11 +24,9 @@ export const initAbout = () => {
     visibilityObserver.observe(canvas);
   }
 
-  // Scroll reveal for right column and stats strip
+  // Scroll reveal for right column
   if (!reduced) {
-    const revealEls = document.querySelectorAll(
-      ".manifesto__portrait-col, .manifesto__stats",
-    );
+    const revealEls = document.querySelectorAll(".manifesto__portrait-col");
     const revealObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -44,7 +42,7 @@ export const initAbout = () => {
   } else {
     // Skip animation — show immediately
     document
-      .querySelectorAll(".manifesto__portrait-col, .manifesto__stats")
+      .querySelectorAll(".manifesto__portrait-col")
       .forEach((el) => el.classList.add("about-reveal--visible"));
   }
 };

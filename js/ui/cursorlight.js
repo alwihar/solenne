@@ -1,92 +1,55 @@
 import { prefersReducedMotion } from "../config.js";
 
+// Minimal ring cursor: a lerping ring + a dot glued to the raw pointer.
+// Both use mix-blend difference so they stay legible over any section.
 export const initCursorLight = () => {
-  // Bail out on touch-only devices — no hover capability means no cursor to follow.
+  // Bail out on touch-only devices — no hover means no cursor to follow.
   if (window.matchMedia("(hover: none)").matches) return;
 
-  const blob = document.createElement("div");
-  blob.className = "cursor-blob";
-
-  const glyph = document.createElement("span");
-  glyph.className = "cursor-blob__glyph";
-  glyph.textContent = "+";
-  blob.appendChild(glyph);
-  document.body.appendChild(blob);
+  const ring = document.createElement("div");
+  ring.className = "cursor-ring";
+  const dot = document.createElement("div");
+  dot.className = "cursor-dot";
+  document.body.appendChild(ring);
+  document.body.appendChild(dot);
 
   const reducedMotion = prefersReducedMotion();
+  const LERP = 0.2;
 
-  const LERP = 0.14;
-  const MAX_SPEED = 40; // px/frame beyond which squash is maxed
-
-  // Current lerped position.
-  let cx = window.innerWidth / 2;
-  let cy = window.innerHeight / 2;
-
-  // Target position.
-  let tx = cx;
-  let ty = cy;
-
-  // Previous lerped position — for velocity / direction.
-  let px = cx;
-  let py = cy;
+  // Ring position (lerped).
+  let rx = window.innerWidth / 2;
+  let ry = window.innerHeight / 2;
+  // Target / raw pointer position.
+  let tx = rx;
+  let ty = ry;
 
   let rafId = null;
 
-  const applyTransform = (x, y, angle, sx, sy) => {
-    blob.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}rad) scale(${sx}, ${sy})`;
+  const placeRing = (x, y) => {
+    ring.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+  };
+  const placeDot = (x, y) => {
+    dot.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
   };
 
-  // Seed position so the first frame doesn't pop from (0,0).
-  applyTransform(cx, cy, 0, 1, 1);
+  placeRing(rx, ry);
+  placeDot(tx, ty);
 
   const tick = () => {
     rafId = null;
+    rx += (tx - rx) * LERP;
+    ry += (ty - ry) * LERP;
+    placeRing(rx, ry);
 
-    if (reducedMotion) {
-      applyTransform(tx, ty, 0, 1, 1);
-    } else {
-      // Store previous position before updating.
-      px = cx;
-      py = cy;
-
-      cx += (tx - cx) * LERP;
-      cy += (ty - cy) * LERP;
-
-      // Velocity vector from previous to current lerped position.
-      const vx = cx - px;
-      const vy = cy - py;
-      const speed = Math.sqrt(vx * vx + vy * vy);
-
-      let angle = 0;
-      let sx = 1;
-      let sy = 1;
-
-      if (speed > 0.15) {
-        angle = Math.atan2(vy, vx);
-        // Squash: stretch along motion axis, compress on perpendicular.
-        const t = Math.min(speed / MAX_SPEED, 1);
-        // sx is the axis-aligned scale along the motion direction.
-        const stretch = 1 + t * 0.25;
-        const squash = 1 / stretch; // preserve area roughly
-        sx = stretch;
-        sy = squash;
-      }
-
-      applyTransform(cx, cy, angle, sx, sy);
-
-      // Keep the rAF loop alive until fully settled.
-      const dxRem = tx - cx;
-      const dyRem = ty - cy;
-      if (dxRem * dxRem + dyRem * dyRem > 0.25 || speed > 0.15) {
-        rafId = requestAnimationFrame(tick);
-      }
+    const dx = tx - rx;
+    const dy = ty - ry;
+    if (dx * dx + dy * dy > 0.25) {
+      rafId = requestAnimationFrame(tick);
     }
   };
 
   const scheduleFrame = () => {
-    if (rafId === null) {
-      rafId = requestAnimationFrame(tick);
-    }
+    if (rafId === null) rafId = requestAnimationFrame(tick);
   };
 
   window.addEventListener(
@@ -94,19 +57,25 @@ export const initCursorLight = () => {
     (e) => {
       tx = e.clientX;
       ty = e.clientY;
-      scheduleFrame();
+      placeDot(tx, ty);
+      if (reducedMotion) {
+        rx = tx;
+        ry = ty;
+        placeRing(rx, ry);
+      } else {
+        scheduleFrame();
+      }
     },
     { passive: true },
   );
 
-  // Interactive state: detect hover over clickable targets.
+  // Grow the ring over interactive targets.
   const INTERACTIVE = "a, button, .work-card";
-
   window.addEventListener(
     "pointerover",
     (e) => {
       const active = e.target.closest(INTERACTIVE) !== null;
-      blob.classList.toggle("cursor-blob--active", active);
+      ring.classList.toggle("cursor-ring--active", active);
     },
     { passive: true },
   );

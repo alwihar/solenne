@@ -18,7 +18,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 18vh clamp(24px, 8vw, 140px) 0;
+  padding: 18vh clamp(24px, 8vw, 140px) clamp(48px, 10vh, 120px);
   background: linear-gradient(to bottom,
     transparent 0%,
     rgba(20, 15, 56, 0.72) 22%,
@@ -183,86 +183,8 @@
   color: rgba(255, 246, 236, 0.5);
 }
 
-.manifesto__portrait-meta {
-  margin-top: 10px;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.manifesto__portrait-meta li {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.22em;
-  color: rgba(255, 246, 236, 0.35);
-}
-
-/* Stats strip */
-.manifesto__stats {
-  display: flex;
-  align-items: stretch;
-  justify-content: space-around;
-  gap: 0;
-  border-top: 1px solid rgba(255, 246, 236, 0.15);
-  border-bottom: 1px solid rgba(255, 246, 236, 0.15);
-  padding: clamp(28px, 4vh, 52px) clamp(24px, 8vw, 140px);
-  margin: 0 calc(-1 * clamp(24px, 8vw, 140px));
-  /* scroll-reveal start state */
-  opacity: 0;
-  transform: translateY(28px);
-  transition:
-    opacity 0.75s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 0.75s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.manifesto__stats.about-reveal--visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.manifesto__stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-  flex: 1;
-}
-.manifesto__stat + .manifesto__stat {
-  border-left: 1px solid rgba(255, 246, 236, 0.1);
-}
-
-.manifesto__stat-num {
-  font-family: var(--font-display);
-  font-size: clamp(40px, 6vw, 80px);
-  font-weight: 300;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--warm-white);
-}
-
-.manifesto__stat-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.28em;
-  color: rgba(255, 246, 236, 0.45);
-}
-
-@media (max-width: 640px) {
-  .manifesto__stats {
-    flex-direction: column;
-    align-items: center;
-    gap: clamp(28px, 4vh, 44px);
-  }
-  .manifesto__stat + .manifesto__stat {
-    border-left: none;
-    border-top: 1px solid rgba(255, 246, 236, 0.1);
-    padding-top: clamp(28px, 4vh, 44px);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .manifesto__portrait-col,
-  .manifesto__stats {
+  .manifesto__portrait-col {
     opacity: 1;
     transform: none;
     transition: none;

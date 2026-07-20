@@ -4,6 +4,7 @@ import { initWorks } from "./ui/works.js";
 import { initAbout } from "./ui/about.js";
 import { initContactForm } from "./ui/form.js";
 import { initCursorLight } from "./ui/cursorlight.js";
+import { initFluid } from "./ui/fluid.js";
 import { prefersReducedMotion } from "./config.js";
 
 const bootScene = async (preloader) => {
@@ -43,6 +44,7 @@ const boot = () => {
   initAbout();
   initContactForm();
   initCursorLight();
+  initFluid();
   bootScene(preloader);
 };
 
