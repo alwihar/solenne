@@ -46,8 +46,8 @@ export const CAMERA = Object.freeze({
 
 export const SCENE_LAYOUT = Object.freeze({
   horizonZ: -70,
-  sunY: 3.4,
-  sunRadius: 7,
+  sunY: 13,
+  sunRadius: 13,
   lettersY: 2.9, // resting baseline for letter group
   stringTopY: 13, // where the strings vanish above the frame
   dropFromY: 8, // letters start this far up before dropping

@@ -3,8 +3,6 @@
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.4em;
   color: var(--coral); margin-bottom: clamp(24px, 4vh, 48px);
 }
-.section-kicker--dark { color: #c4512f; }
-
 /* word-reveal targets (js/ui/reveal.js) */
 [data-reveal-words] .w {
   display: inline-block;
@@ -37,28 +35,112 @@
   color: rgba(255, 246, 236, 0.55);
 }
 
-/* ---------- works ---------- */
+/* ---------- works — full-dark Galekto-style artworks page ---------- */
 .works {
   position: relative;
-  background: var(--cream); color: var(--ink);
-  padding: clamp(80px, 14vh, 160px) clamp(24px, 8vw, 120px);
-  border-radius: 28px 28px 0 0;
+  /* Lifted indigo, distinct from the near-black indigo of the contact seam */
+  background:
+    linear-gradient(to bottom, #1d1650 0%, #241a5e 100%);
+  color: var(--warm-white);
+  padding: clamp(64px, 10vh, 120px) clamp(24px, 8vw, 120px)
+    clamp(96px, 16vh, 200px);
+  overflow: hidden;
+  border-top: 1px solid rgba(255, 246, 236, 0.08);
 }
-.works__head { margin-bottom: clamp(32px, 5vh, 56px); }
-.works__title {
-  font-size: clamp(34px, 5vw, 68px);
-  font-weight: 420; line-height: 1.1; letter-spacing: -0.02em;
-  max-width: 16ch;
+/* Faint blueprint grid across the whole section */
+.works::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 246, 236, 0.05) 0 1px,
+      transparent 1px 90px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 246, 236, 0.05) 0 1px,
+      transparent 1px 90px
+    );
+  z-index: 0;
+}
+.works__head,
+.works__grid,
+.works__marquee { position: relative; z-index: 2; }
+
+.works__head { margin-bottom: clamp(24px, 4vh, 48px); }
+
+/* Giant ultra-heavy uppercase headline — dark-on-color like the reference */
+.works__display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: clamp(90px, 16vw, 240px);
+  line-height: 0.85;
+  letter-spacing: -0.03em;
+  color: #0d0930;
+}
+
+/* ---------- decorative technical annotations ---------- */
+.works__deco {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  color: rgba(255, 246, 236, 0.12);
+}
+.works__deco-label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: rgba(255, 246, 236, 0.28);
+}
+.works__deco-label--a { top: 34%; right: 8%; }
+.works__deco-label--b { top: 62%; left: 6%; }
+.works__deco-label--c { top: 82%; right: 14%; }
+.works__deco-cross {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  line-height: 1;
+  color: rgba(255, 246, 236, 0.22);
+}
+.works__deco-cross--a { top: 46%; left: 4%; }
+.works__deco-cross--b { top: 70%; right: 5%; }
+.works__deco-cross--c { top: 90%; left: 22%; }
+.works__deco-line {
+  position: absolute;
+  width: clamp(90px, 12vw, 180px);
+  height: 1px;
+  background: rgba(255, 246, 236, 0.12);
+}
+.works__deco-line--a { top: 40%; left: 30%; transform: rotate(-32deg); }
+.works__deco-line--b { top: 76%; right: 26%; transform: rotate(24deg); }
+.works__deco-sketch {
+  position: absolute;
+  top: 55%;
+  right: 3%;
+  width: clamp(120px, 14vw, 220px);
+  height: auto;
+  color: rgba(255, 246, 236, 0.1);
+}
+@media (max-width: 899px) {
+  .works__deco-label--a,
+  .works__deco-cross--a,
+  .works__deco-line--a { display: none; }
 }
 
 /* ---------- marquee strip ---------- */
 .works__marquee {
   overflow: hidden;
-  border-top: 1px solid rgba(34, 26, 51, 0.15);
-  border-bottom: 1px solid rgba(34, 26, 51, 0.15);
+  border-top: 1px solid rgba(255, 246, 236, 0.15);
+  border-bottom: 1px solid rgba(255, 246, 236, 0.15);
   padding: 11px 0;
   margin-bottom: clamp(48px, 8vh, 96px);
-  opacity: 0.5;
+  opacity: 0.45;
 }
 .works__marquee-inner {
   display: flex; white-space: nowrap;
@@ -67,7 +149,7 @@
 .works__marquee-track {
   display: flex; gap: 0; flex-shrink: 0;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.35em;
-  color: var(--ink);
+  color: var(--warm-white);
 }
 .works__marquee-track span { padding: 0 2.4em; }
 @keyframes marquee-scroll {
@@ -81,12 +163,12 @@
   align-items: center;
   margin-top: clamp(14px, 2vh, 22px);
   padding: 5px 14px;
-  border: 1px solid rgba(34, 26, 51, 0.28);
+  border: 1px solid rgba(255, 246, 236, 0.3);
   border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.28em;
-  color: rgba(34, 26, 51, 0.55);
+  color: rgba(255, 246, 236, 0.75);
 }
 
 /* ---------- works grid — scattered 12-col editorial ---------- */
@@ -97,38 +179,39 @@
   align-items: start;
 }
 
-/* Desktop card positions */
+/* Desktop card positions — scattered collage, strong vertical scatter */
 @media (min-width: 900px) {
-  /* Card 1 — Ember Tide: wide landscape */
+  /* Card 1 — Ember Tide: small landscape, top-left */
   .work-card:nth-child(1) {
-    grid-column: 1 / span 7;
+    grid-column: 1 / span 3;
+    margin-top: 0;
   }
   .work-card:nth-child(1) .work-card__frame {
+    aspect-ratio: 4 / 3;
+  }
+
+  /* Card 2 — Salt Cathedral: wide, nudged up */
+  .work-card:nth-child(2) {
+    grid-column: 5 / span 4;
+    margin-top: -40px;
+  }
+  .work-card:nth-child(2) .work-card__frame {
     aspect-ratio: 16 / 10;
   }
 
-  /* Card 2 — Salt Cathedral: portrait, offset down */
-  .work-card:nth-child(2) {
-    grid-column: 9 / span 4;
-    margin-top: clamp(60px, 8vw, 140px);
-  }
-  .work-card:nth-child(2) .work-card__frame {
-    aspect-ratio: 4 / 5;
-  }
-
-  /* Card 3 — Midnight Bloom: square, offset down */
+  /* Card 3 — Midnight Bloom: portrait, dropped deep */
   .work-card:nth-child(3) {
-    grid-column: 2 / span 4;
-    margin-top: clamp(48px, 6vw, 110px);
+    grid-column: 10 / span 3;
+    margin-top: clamp(80px, 10vw, 160px);
   }
   .work-card:nth-child(3) .work-card__frame {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4;
   }
 
-  /* Card 4 — Helios Drift: wide, slight offset */
+  /* Card 4 — Helios Drift: wide, dropped */
   .work-card:nth-child(4) {
-    grid-column: 7 / span 6;
-    margin-top: clamp(24px, 3vw, 60px);
+    grid-column: 3 / span 4;
+    margin-top: clamp(60px, 8vw, 140px);
   }
   .work-card:nth-child(4) .work-card__frame {
     aspect-ratio: 16 / 10;
@@ -185,7 +268,7 @@
   position: absolute;
   width: 14px;
   height: 14px;
-  border-color: rgba(34, 26, 51, 0.35);
+  border-color: rgba(255, 246, 236, 0.35);
   border-style: solid;
   pointer-events: none;
   z-index: 2;
@@ -196,7 +279,7 @@
   position: absolute;
   width: 14px;
   height: 14px;
-  border-color: rgba(34, 26, 51, 0.35);
+  border-color: rgba(255, 246, 236, 0.35);
   border-style: solid;
   pointer-events: none;
   z-index: 2;
@@ -223,14 +306,16 @@
 }
 
 .work-card__frame {
-  position: relative; overflow: hidden; border-radius: 6px;
-  box-shadow: 0 24px 60px -24px rgba(34, 26, 51, 0.45);
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(255, 246, 236, 0.18);
+  box-shadow: 0 30px 70px -30px rgba(6, 3, 24, 0.7);
 }
 .work-card__frame canvas { width: 100%; height: 100%; display: block; }
 .work-card__view {
   position: absolute; right: 14px; bottom: 12px;
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.3em;
   color: var(--warm-white);
+  text-shadow: 0 1px 10px rgba(6, 3, 24, 0.8);
   opacity: 0; transform: translateY(6px);
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
@@ -248,11 +333,11 @@
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.26em;
-  color: rgba(34, 26, 51, 0.65);
+  color: rgba(255, 246, 236, 0.85);
   text-transform: uppercase;
 }
 .work-card__ref strong {
-  color: #c4512f;
+  color: var(--amber);
   font-weight: 500;
 }
 /* Year + medium, right-aligned */
@@ -260,7 +345,7 @@
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.12em;
-  color: rgba(34, 26, 51, 0.45);
+  color: rgba(255, 246, 236, 0.5);
   text-align: right;
   white-space: nowrap;
   flex-shrink: 0;
