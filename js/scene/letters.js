@@ -304,21 +304,40 @@ export const createLetters = async (scene, quality, onProgress) => {
 
   // Randomise a single letter's swing state and start its drop tween.
   // Extracted so play() and the re-drop path share identical logic.
+  //
+  // Two-phase drop:
+  //   1. Free fall  — accelerating power3.in from the random start height down
+  //      PAST the resting point to a small overshoot, duration scaled by
+  //      fall distance so higher letters spend longer in the air.
+  //   2. Rope catch — elastic.out from the overshoot back to rest (dropY = 0),
+  //      duration randomised in [1.6, 2.0] s.  A hard catch jolts the letter
+  //      sideways, so thetaVel is bumped a little more than before (±1.8).
   const dropLetter = (letter) => {
     const { state } = letter;
-    state.dropY = SCENE_LAYOUT.dropFromY * (0.75 + Math.random() * 0.7);
+    const startHeight = SCENE_LAYOUT.dropFromY * (0.75 + Math.random() * 0.7);
+    state.dropY = startHeight;
     state.yank = 0;
     state.spin = 0;
     state.spinTarget = 0;
     state.theta = (Math.random() - 0.5) * 0.5;
-    state.thetaVel = (Math.random() - 0.5) * 1.6;
+    state.thetaVel = (Math.random() - 0.5) * 1.8;
     const delay = 0.05 + letter.dropSlot * 0.14 + Math.random() * 0.4;
-    gsap.to(state, {
-      dropY: 0,
-      duration: 1.5 + Math.random() * 0.8,
-      delay,
-      ease: "elastic.out(1, 0.55)",
-    });
+    const overshoot = -(0.5 + Math.random() * 0.4);
+    const fallDuration = 0.5 + startHeight * 0.055;
+    const settleDuration = 1.6 + Math.random() * 0.4;
+    gsap.killTweensOf(state);
+    gsap
+      .timeline({ delay })
+      .to(state, {
+        dropY: overshoot,
+        duration: fallDuration,
+        ease: "power3.in",
+      })
+      .to(state, {
+        dropY: 0,
+        duration: settleDuration,
+        ease: "elastic.out(1, 0.32)",
+      });
   };
 
   const play = () => {

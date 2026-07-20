@@ -66,22 +66,27 @@ const SUN_FRAGMENT = /* glsl */ `
     vec2 c = (vUv - 0.5) * 2.0;
     float r = length(c);
 
-    vec3 core = vec3(1.0, 0.97, 0.88);
-    vec3 limb = vec3(1.0, 0.72, 0.42);
-    vec3 edge = vec3(1.0, 0.55, 0.34);
-    vec3 col = mix(core, limb, smoothstep(0.15, 0.85, r));
-    col = mix(col, edge, smoothstep(0.8, 1.0, r));
+    // Clean radial falloff: white-hot core -> golden mid -> deep amber limb.
+    vec3 core = vec3(1.0, 0.985, 0.94);
+    vec3 mid = vec3(1.0, 0.86, 0.55);
+    vec3 edge = vec3(1.0, 0.62, 0.36);
+    vec3 col = mix(core, mid, smoothstep(0.0, 0.72, r));
+    col = mix(col, edge, smoothstep(0.62, 1.0, r));
 
-    // Surface granulation, drifting slowly.
-    float grain = fbm(vUv * 7.0 + vec2(uTime * 0.02, uTime * 0.013));
-    col *= 0.92 + grain * 0.14;
+    // Barely-there large-scale breathing (no blotches at big sizes).
+    float breath = fbm(vUv * 2.2 + vec2(uTime * 0.008, 0.0));
+    col *= 0.985 + breath * 0.03;
 
-    // Horizontal atmosphere bands, heavier toward the lower half.
-    float band = sin(vUv.y * 30.0 + fbm(vUv * 3.0) * 4.0 - uTime * 0.06);
-    float bandMask = (band * 0.5 + 0.5) * smoothstep(0.8, 0.12, vUv.y);
-    col *= 1.0 - bandMask * 0.22;
+    // Soft atmosphere bands, lower third only, drifting slowly.
+    float band = sin(vUv.y * 20.0 + fbm(vUv * 1.8) * 2.5 - uTime * 0.05);
+    float bandMask = (band * 0.5 + 0.5) * smoothstep(0.5, 0.05, vUv.y);
+    col *= 1.0 - bandMask * 0.1;
 
-    float alpha = 1.0 - smoothstep(0.92, 1.0, r);
+    // Hot rim just inside the edge.
+    float rim = smoothstep(0.85, 0.97, r) * (1.0 - smoothstep(0.97, 1.0, r));
+    col += vec3(1.0, 0.7, 0.4) * rim * 0.12;
+
+    float alpha = 1.0 - smoothstep(0.965, 1.0, r);
     gl_FragColor = vec4(col, alpha);
   }
 `;
