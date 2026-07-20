@@ -10,9 +10,6 @@ const LETTER_GAP = 0.4;
 const MAX_WORD_SCALE = 1.85;
 const VIEWPORT_FILL = 0.92;
 
-const STRAND_COLOR = "#8d7ab0"; // muted lilac — visible but delicate on pale letters
-const STRAND_RADIUS = 0.012;
-
 // Pendulum feel: soft spring, light damping so pushes keep swinging a while.
 const PENDULUM_LENGTH = 2.2;
 const SPRING_K = 5.5;
@@ -24,6 +21,9 @@ const ROTATION_FACTOR = 0.55;
 const ROPE_SEGMENTS = 14;
 const ROPE_WIDTH = 0.055;
 const ROPE_COLOR = "#2b1746";
+
+const STRAND_COLOR = ROPE_COLOR; // continuation of the hanging rope
+const STRAND_RADIUS = ROPE_WIDTH / 2; // 0.0275 — tube diameter matches rope ribbon width
 
 const loadFont = (onProgress) =>
   new Promise((resolve, reject) => {
@@ -71,42 +71,74 @@ const buildLetterMeshes = (font, quality) => {
   });
 };
 
-// Loose thread strands draped across a letter's face, like the reference
-// site — wavy path across the glyph with a drooping tail off one edge.
+// Thread strand that reads as a continuation of the hanging rope: it starts
+// at the rope's attachment point on the letter top (0, height/2-0.06, 0),
+// arcs over the top-front corner onto the face, then drapes in a lazy S-curve
+// and ends in a short drooping tail near one side/bottom edge.
 const buildStrand = (width, height, depth) => {
   const seed = Math.random() * 10;
+  // Direction the strand drapes across the face: left (-1) or right (+1).
   const dir = Math.random() > 0.5 ? 1 : -1;
-  // Keep the whole strand clearly in front of the beveled face.
-  const z = depth / 2 + 0.18 + Math.random() * 0.06;
-  const yBase = (Math.random() - 0.5) * height * 0.5;
+  // How far down the face the mid-section wanders (randomised per strand).
+  const yDrop = 0.3 + Math.random() * 0.5;
+  // Z of points lying on the front face, clearing the bevel.
+  const faceZ = depth / 2 + 0.15;
 
-  const across = 5;
-  const points = Array.from({ length: across + 1 }, (_, i) => {
-    const s = i / across;
-    const x = dir * (-width / 2 - 0.08 + s * (width + 0.22));
-    const y =
-      yBase +
-      Math.sin(s * 4.6 + seed) * 0.22 +
-      Math.sin(s * 10.1 + seed * 2.1) * 0.09;
-    return new THREE.Vector3(x, y, z + Math.sin(s * 7 + seed) * 0.025);
-  });
-  // Short drooping tail past the far edge.
-  const last = points[points.length - 1];
-  points.push(
-    new THREE.Vector3(last.x + dir * 0.18, last.y - 0.35, z),
+  // Attachment point on the letter top in letter-local space.
+  const attachY = height / 2 - 0.06;
+
+  // Point 0: at the rope attachment, still on the letter top face (z ~ 0).
+  // Point 1: just above the top-front corner — x nudged toward drape side,
+  //           z starting to move forward.
+  // Points 2-5: on the front face, sweeping across and downward in an S.
+  // Points 6-7: drooping tail past the far edge / bottom.
+  const xStart = dir * (width * 0.1); // slight offset so tail exits one side
+  const xEnd = dir * (width / 2 + 0.05); // ends near the far edge
+
+  const points = [
+    // 0 — rope attachment (top surface, z≈0)
+    new THREE.Vector3(0, attachY, 0),
+    // 1 — transition over the top-front corner
+    new THREE.Vector3(xStart * 0.4, attachY - 0.04, faceZ * 0.55),
+    // 2 — arrive on the face just below the top edge
     new THREE.Vector3(
-      last.x + dir * 0.1,
-      last.y - 0.65 - Math.random() * 0.3,
-      z + 0.04,
+      xStart * 0.7,
+      attachY - 0.15 + Math.sin(seed) * 0.08,
+      faceZ,
     ),
-  );
+    // 3 — mid-face, S inflection point (drifts toward the far side)
+    new THREE.Vector3(
+      dir * (width * 0.2) + Math.sin(seed * 1.7) * 0.15,
+      attachY - yDrop + Math.sin(seed * 2.3) * 0.12,
+      faceZ + Math.sin(seed * 3.1) * 0.03,
+    ),
+    // 4 — lower on the face, S curve continues toward the far side
+    new THREE.Vector3(
+      dir * (width * 0.38) + Math.sin(seed * 2.9) * 0.1,
+      attachY - yDrop * 1.6 + Math.sin(seed * 1.1) * 0.1,
+      faceZ + Math.sin(seed * 4.3) * 0.03,
+    ),
+    // 5 — reaching toward the far edge
+    new THREE.Vector3(
+      xEnd - dir * 0.06,
+      attachY - yDrop * 2.1 + Math.sin(seed * 0.9) * 0.08,
+      faceZ,
+    ),
+    // 6 — tail begins past the side edge, starts drooping
+    new THREE.Vector3(xEnd + dir * 0.18, attachY - yDrop * 2.4, faceZ),
+    // 7 — tail end, drooping down; kept within ~0.7 units of glyph bounds
+    new THREE.Vector3(
+      xEnd + dir * 0.1,
+      attachY - yDrop * 2.4 - 0.45 - Math.random() * 0.25,
+      faceZ + 0.04,
+    ),
+  ];
 
   const curve = new THREE.CatmullRomCurve3(points);
   const geometry = new THREE.TubeGeometry(curve, 32, STRAND_RADIUS, 5);
   const material = new THREE.MeshBasicMaterial({
     color: STRAND_COLOR,
-    transparent: true,
-    opacity: 0.85,
+    transparent: false,
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
@@ -194,11 +226,8 @@ export const createLetters = async (scene, quality, onProgress) => {
     entry.mesh.position.set(x, SCENE_LAYOUT.dropFromY, 0);
     group.add(entry.mesh);
 
-    // One thread strand per letter (occasionally two), parented to swing along.
-    const strandCount = 1 + (Math.random() < 0.3 ? 1 : 0);
-    for (let s = 0; s < strandCount; s += 1) {
-      entry.mesh.add(buildStrand(entry.width, entry.height, LETTER_DEPTH));
-    }
+    // Exactly one thread strand per letter, parented to swing along.
+    entry.mesh.add(buildStrand(entry.width, entry.height, LETTER_DEPTH));
 
     const rope = createRopeMesh();
     group.add(rope);
