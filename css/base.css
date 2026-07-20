@@ -80,30 +80,40 @@ body.lb-open { overflow: hidden; }
   100% { transform: translate(0, 0); }
 }
 
-/* ---------- cursor light ---------- */
-.cursor-light {
+/* ---------- cursor blob ---------- */
+.cursor-blob {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 15; /* above main (z-10), below grain (40) and nav (50) */
-  width: 720px;
-  height: 720px;
-  margin: -360px 0 0 -360px;
+  z-index: 60; /* above nav (50) and grain (40) so difference blend hits everything */
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(255, 190, 130, 0.16) 0%,
-    rgba(255, 140, 90, 0.07) 35%,
-    transparent 70%
-  );
-  mix-blend-mode: screen;
+  background: rgba(255, 255, 255, 0.9);
+  mix-blend-mode: difference;
+  filter: blur(1px);
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.6s ease;
   will-change: transform;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.25s ease, height 0.25s ease, margin 0.25s ease;
 }
-.cursor-light--on {
-  opacity: 1;
+.cursor-blob__glyph {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: #fff;
+  line-height: 1;
+  /* Counter-rotate so the glyph stays upright during blob squash. */
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.cursor-blob--active {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
 }
 
 /* ---------- nav ---------- */

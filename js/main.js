@@ -1,6 +1,7 @@
 import { createPreloader } from "./preloader.js";
 import { initWordReveals } from "./ui/reveal.js";
 import { initWorks } from "./ui/works.js";
+import { initAbout } from "./ui/about.js";
 import { initContactForm } from "./ui/form.js";
 import { initCursorLight } from "./ui/cursorlight.js";
 import { prefersReducedMotion } from "./config.js";
@@ -39,6 +40,7 @@ const boot = () => {
   const preloader = createPreloader();
   initWordReveals();
   initWorks();
+  initAbout();
   initContactForm();
   initCursorLight();
   bootScene(preloader);

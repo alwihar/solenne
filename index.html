@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SOLENNE — 3D Artist &amp; Digital Sculptor</title>
-  <meta name="description" content="Solenne — 3D artist and digital sculptor. Worlds built from light, salt and code." />
+  <title>SOLENNE · 3D Artist &amp; Digital Sculptor</title>
+  <meta name="description" content="Solenne · 3D artist and digital sculptor. Worlds built from light, salt and code." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -42,7 +42,7 @@
 
   <!-- Nav -->
   <header class="nav">
-    <a class="nav__logo" href="#top" aria-label="Solenne — home">S<span>.</span></a>
+    <a class="nav__logo" href="#top" aria-label="Solenne, home">S<span>.</span></a>
     <nav class="nav__links" aria-label="Main">
       <a href="#works">WORKS</a>
       <a href="#manifesto">ABOUT</a>
@@ -53,21 +53,75 @@
   <main id="top">
     <!-- Hero -->
     <section class="hero" id="hero">
-      <p class="hero__kicker">PORTFOLIO OF LIGHT — VOL. II</p>
-      <h1 class="visually-hidden">Solenne — 3D artist and digital sculptor</h1>
-      <p class="hero__tagline">3D artist &amp; digital sculptor —<br />worlds built from light, salt and code.</p>
+      <p class="hero__kicker">PORTFOLIO OF LIGHT · VOL. II</p>
+      <h1 class="visually-hidden">Solenne · 3D artist and digital sculptor</h1>
+      <p class="hero__tagline">3D artist &amp; digital sculptor.<br />Worlds built from light, salt and code.</p>
       <p class="hero__scroll-hint"><span></span>SCROLL</p>
     </section>
 
-    <!-- Manifesto -->
+    <!-- Manifesto / About -->
     <section class="manifesto" id="manifesto">
-      <p class="section-kicker">MANIFESTO</p>
-      <p class="manifesto__statement" data-reveal-words>
-        Every pixel is poured, not placed. I build slow, deliberate worlds
-        where light behaves like memory — and the sea never renders the same
-        frame twice.
-      </p>
-      <p class="manifesto__signature">— Solenne, somewhere near the horizon</p>
+      <!-- Decorative annotations in negative space -->
+      <span class="manifesto__deco manifesto__deco--fig-i" aria-hidden="true">FIG. I</span>
+      <span class="manifesto__deco manifesto__deco--cross" aria-hidden="true">+</span>
+      <span class="manifesto__deco manifesto__deco--fig-ii" aria-hidden="true">FIG. II</span>
+
+      <p class="section-kicker">ABOUT · MANIFESTO</p>
+
+      <div class="manifesto__columns">
+        <!-- LEFT: statement + secondary paragraph + signature -->
+        <div class="manifesto__text-col">
+          <p class="manifesto__statement" data-reveal-words>
+            Every pixel is poured, not placed. I build slow, deliberate worlds
+            where light behaves like memory, and the sea never renders the same
+            frame twice.
+          </p>
+          <p class="manifesto__body">
+            I come to each piece from the water's edge, where code dissolves
+            into salt and something close to feeling. The ocean taught me that
+            repetition is not redundancy. I am still learning its grammar.
+          </p>
+          <p class="manifesto__signature">Solenne, somewhere near the horizon</p>
+        </div>
+
+        <!-- RIGHT: generative portrait artifact -->
+        <div class="manifesto__portrait-col">
+          <div class="manifesto__portrait-frame-wrap">
+            <span class="manifesto__corner-tl" aria-hidden="true"></span>
+            <span class="manifesto__corner-br" aria-hidden="true"></span>
+            <div class="manifesto__portrait-frame">
+              <canvas
+                id="about-portrait-canvas"
+                width="600"
+                height="800"
+                aria-label="Generative artist portrait"
+              ></canvas>
+            </div>
+          </div>
+          <p class="manifesto__portrait-caption">FIG. 0 · THE ARTIST, RENDERED</p>
+          <ul class="manifesto__portrait-meta" aria-label="Studio metadata">
+            <li>EST. 2024</li>
+            <li>BASED NOWHERE, ALWAYS NEAR WATER</li>
+            <li>MEDIUM: LIGHT, SALT, CODE</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Stats strip -->
+      <div class="manifesto__stats">
+        <div class="manifesto__stat">
+          <span class="manifesto__stat-num">40+</span>
+          <span class="manifesto__stat-label">COMMISSIONED WORKS</span>
+        </div>
+        <div class="manifesto__stat">
+          <span class="manifesto__stat-num">12</span>
+          <span class="manifesto__stat-label">EXHIBITIONS OF LIGHT</span>
+        </div>
+        <div class="manifesto__stat">
+          <span class="manifesto__stat-num">&#x221e;</span>
+          <span class="manifesto__stat-label">FRAMES OF THE SAME SEA</span>
+        </div>
+      </div>
     </section>
 
     <!-- Works -->
@@ -99,7 +153,7 @@
 
     <!-- Contact -->
     <section class="contact" id="contact">
-      <p class="section-kicker">COMMISSIONS — OPEN FOR AUTUMN 2026</p>
+      <p class="section-kicker">COMMISSIONS · OPEN FOR AUTUMN 2026</p>
       <div class="contact__layout">
         <h2 class="contact__display"><span class="contact__display-fill">Commission a piece</span></h2>
         <div class="contact__info">
@@ -112,7 +166,7 @@
             <a href="#" rel="noopener noreferrer" target="_blank">BEHANCE ↗</a>
             <a href="#" rel="noopener noreferrer" target="_blank">ARTSTATION ↗</a>
           </nav>
-          <p class="contact__note">I read everything myself — expect a reply within two days.</p>
+          <p class="contact__note">I read everything myself. Expect a reply within two days.</p>
         </div>
       </div>
     </section>

@@ -4,45 +4,80 @@ export const initCursorLight = () => {
   // Bail out on touch-only devices — no hover capability means no cursor to follow.
   if (window.matchMedia("(hover: none)").matches) return;
 
-  const el = document.createElement("div");
-  el.className = "cursor-light";
-  document.body.appendChild(el);
+  const blob = document.createElement("div");
+  blob.className = "cursor-blob";
+
+  const glyph = document.createElement("span");
+  glyph.className = "cursor-blob__glyph";
+  glyph.textContent = "+";
+  blob.appendChild(glyph);
+  document.body.appendChild(blob);
 
   const reducedMotion = prefersReducedMotion();
 
-  // Current rendered position (lerped toward target).
-  let currentX = window.innerWidth / 2;
-  let currentY = window.innerHeight / 2;
+  const LERP = 0.14;
+  const MAX_SPEED = 40; // px/frame beyond which squash is maxed
 
-  // Target position updated on every pointermove.
-  let targetX = currentX;
-  let targetY = currentY;
+  // Current lerped position.
+  let cx = window.innerWidth / 2;
+  let cy = window.innerHeight / 2;
+
+  // Target position.
+  let tx = cx;
+  let ty = cy;
+
+  // Previous lerped position — for velocity / direction.
+  let px = cx;
+  let py = cy;
 
   let rafId = null;
-  let isVisible = false;
 
-  const LERP_FACTOR = 0.12;
-
-  const setTransform = (x, y) => {
-    el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  const applyTransform = (x, y, angle, sx, sy) => {
+    blob.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${angle}rad) scale(${sx}, ${sy})`;
   };
 
-  // Seed the element at the viewport centre so the first lerp starts centred.
-  setTransform(currentX, currentY);
+  // Seed position so the first frame doesn't pop from (0,0).
+  applyTransform(cx, cy, 0, 1, 1);
 
   const tick = () => {
     rafId = null;
 
     if (reducedMotion) {
-      // No interpolation — jump straight to target.
-      setTransform(targetX, targetY);
+      applyTransform(tx, ty, 0, 1, 1);
     } else {
-      currentX += (targetX - currentX) * LERP_FACTOR;
-      currentY += (targetY - currentY) * LERP_FACTOR;
-      setTransform(currentX, currentY);
+      // Store previous position before updating.
+      px = cx;
+      py = cy;
 
-      // Keep animating until we've settled within half a pixel.
-      if (Math.abs(targetX - currentX) > 0.5 || Math.abs(targetY - currentY) > 0.5) {
+      cx += (tx - cx) * LERP;
+      cy += (ty - cy) * LERP;
+
+      // Velocity vector from previous to current lerped position.
+      const vx = cx - px;
+      const vy = cy - py;
+      const speed = Math.sqrt(vx * vx + vy * vy);
+
+      let angle = 0;
+      let sx = 1;
+      let sy = 1;
+
+      if (speed > 0.15) {
+        angle = Math.atan2(vy, vx);
+        // Squash: stretch along motion axis, compress on perpendicular.
+        const t = Math.min(speed / MAX_SPEED, 1);
+        // sx is the axis-aligned scale along the motion direction.
+        const stretch = 1 + t * 0.25;
+        const squash = 1 / stretch; // preserve area roughly
+        sx = stretch;
+        sy = squash;
+      }
+
+      applyTransform(cx, cy, angle, sx, sy);
+
+      // Keep the rAF loop alive until fully settled.
+      const dxRem = tx - cx;
+      const dyRem = ty - cy;
+      if (dxRem * dxRem + dyRem * dyRem > 0.25 || speed > 0.15) {
         rafId = requestAnimationFrame(tick);
       }
     }
@@ -57,26 +92,22 @@ export const initCursorLight = () => {
   window.addEventListener(
     "pointermove",
     (e) => {
-      targetX = e.clientX;
-      targetY = e.clientY;
+      tx = e.clientX;
+      ty = e.clientY;
       scheduleFrame();
     },
     { passive: true },
   );
 
-  // Visibility: hide while in hero viewport (top half of first screen), fade in below.
-  const updateVisibility = () => {
-    const heroThreshold = window.innerHeight * 0.5;
-    const shouldShow = window.scrollY >= heroThreshold;
+  // Interactive state: detect hover over clickable targets.
+  const INTERACTIVE = "a, button, .work-card";
 
-    if (shouldShow !== isVisible) {
-      isVisible = shouldShow;
-      el.classList.toggle("cursor-light--on", isVisible);
-    }
-  };
-
-  window.addEventListener("scroll", updateVisibility, { passive: true });
-
-  // Run once immediately in case the page loads scrolled down.
-  updateVisibility();
+  window.addEventListener(
+    "pointerover",
+    (e) => {
+      const active = e.target.closest(INTERACTIVE) !== null;
+      blob.classList.toggle("cursor-blob--active", active);
+    },
+    { passive: true },
+  );
 };

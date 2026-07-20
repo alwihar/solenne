@@ -116,7 +116,7 @@ const attachTilt = (card) => {
 
 const buildMarquee = () => {
   const text =
-    "SELECTED WORKS · 2024 — 2026 · LIGHT STUDIES · COMMISSIONS OPEN ·";
+    "SELECTED WORKS · 2024 · 2026 · LIGHT STUDIES · COMMISSIONS OPEN ·";
   const segments = 6;
 
   // Build one "half" track with several repetitions for seamless looping
@@ -186,12 +186,12 @@ export const initWorks = () => {
         <span class="work-card__corner-tl" aria-hidden="true"></span>
         <span class="work-card__corner-br" aria-hidden="true"></span>
         <div class="work-card__frame">
-          <canvas width="800" height="600" aria-label="${work.title} — generative artwork"></canvas>
+          <canvas width="800" height="600" aria-label="${work.title} · generative artwork"></canvas>
           <span class="work-card__view">VIEW STUDY →</span>
         </div>
       </div>
       <div class="work-card__meta">
-        <span class="work-card__ref"><strong>REF ${refNum}</strong> &mdash; ${work.title.toUpperCase()}</span>
+        <span class="work-card__ref"><strong>REF ${refNum}</strong> &middot; ${work.title.toUpperCase()}</span>
         <span class="work-card__info">${work.year}<br>${work.medium}</span>
       </div>`;
 
