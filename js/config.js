@@ -50,7 +50,7 @@ export const SCENE_LAYOUT = Object.freeze({
   sunRadius: 7,
   lettersY: 2.9, // resting baseline for letter group
   stringTopY: 13, // where the strings vanish above the frame
-  dropFromY: 4.2, // hang height before dropping — low enough to be visible in frame
+  dropFromY: 8, // letters start this far up before dropping
   liftToY: 12, // how far letters rise when scrolled away
 });
 

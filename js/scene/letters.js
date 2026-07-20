@@ -304,42 +304,22 @@ export const createLetters = async (scene, quality, onProgress) => {
 
   // Randomise a single letter's swing state and start its drop tween.
   // Extracted so play() and the re-drop path share identical logic.
-  //
-  // Two-phase drop:
-  //   1. Free fall  — accelerating power3.in from the random start height down
-  //      PAST the resting point to a small overshoot, duration scaled by
-  //      fall distance so higher letters spend longer in the air.
-  //   2. Rope catch — elastic.out from the overshoot back to rest (dropY = 0),
-  //      duration randomised in [1.6, 2.0] s.  A hard catch jolts the letter
-  //      sideways, so thetaVel is bumped a little more than before (±1.8).
   const dropLetter = (letter) => {
     const { state } = letter;
-    const startHeight = SCENE_LAYOUT.dropFromY * (0.85 + Math.random() * 0.35);
-    state.dropY = startHeight;
+    state.dropY = SCENE_LAYOUT.dropFromY * (0.75 + Math.random() * 0.7);
     state.yank = 0;
     state.spin = 0;
     state.spinTarget = 0;
     state.theta = (Math.random() - 0.5) * 0.5;
-    state.thetaVel = (Math.random() - 0.5) * 1.8;
-    // Wider stagger so each letter's fall reads on its own.
-    const delay = 0.05 + letter.dropSlot * 0.22 + Math.random() * 0.5;
-    const overshoot = -(0.7 + Math.random() * 0.5);
-    // Long enough that the slow start → acceleration is visible in frame.
-    const fallDuration = 0.55 + startHeight * 0.16;
-    const settleDuration = 1.6 + Math.random() * 0.4;
+    state.thetaVel = (Math.random() - 0.5) * 1.6;
+    const delay = 0.05 + letter.dropSlot * 0.14 + Math.random() * 0.4;
     gsap.killTweensOf(state);
-    gsap
-      .timeline({ delay })
-      .to(state, {
-        dropY: overshoot,
-        duration: fallDuration,
-        ease: "power3.in",
-      })
-      .to(state, {
-        dropY: 0,
-        duration: settleDuration,
-        ease: "elastic.out(1, 0.32)",
-      });
+    gsap.to(state, {
+      dropY: 0,
+      duration: 1.5 + Math.random() * 0.8,
+      delay,
+      ease: "elastic.out(1, 0.55)",
+    });
   };
 
   const play = () => {
