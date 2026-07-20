@@ -48,7 +48,7 @@ export const SCENE_LAYOUT = Object.freeze({
   horizonZ: -70,
   sunY: 3.4,
   sunRadius: 7,
-  lettersY: 3.4, // resting baseline for letter group
+  lettersY: 2.9, // resting baseline for letter group
   stringTopY: 13, // where the strings vanish above the frame
   dropFromY: 8, // letters start this far up before dropping
   liftToY: 12, // how far letters rise when scrolled away

@@ -180,15 +180,18 @@ export const initWorks = () => {
     // Stagger delays: 0, 0.12, 0.24, 0.36 s
     card.style.setProperty("--reveal-delay", `${i * 0.12}s`);
 
+    const refNum = String(i + 1).padStart(3, "0");
     card.innerHTML = `
-      <div class="work-card__frame">
-        <canvas width="800" height="600" aria-label="${work.title} — generative artwork"></canvas>
-        <span class="work-card__view">VIEW STUDY →</span>
+      <div class="work-card__frame-wrap">
+        <span class="work-card__corner-tl" aria-hidden="true"></span>
+        <span class="work-card__corner-br" aria-hidden="true"></span>
+        <div class="work-card__frame">
+          <canvas width="800" height="600" aria-label="${work.title} — generative artwork"></canvas>
+          <span class="work-card__view">VIEW STUDY →</span>
+        </div>
       </div>
       <div class="work-card__meta">
-        <span class="work-card__index">0${i + 1}</span>
-        <h3 class="work-card__title">${work.title}</h3>
-        <p class="work-card__desc">${work.desc}</p>
+        <span class="work-card__ref"><strong>REF ${refNum}</strong> &mdash; ${work.title.toUpperCase()}</span>
         <span class="work-card__info">${work.year}<br>${work.medium}</span>
       </div>`;
 

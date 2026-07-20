@@ -75,26 +75,80 @@
   to   { transform: translateX(-50%); }
 }
 
-/* ---------- works grid — asymmetric editorial ---------- */
+/* ---------- works badge chip ---------- */
+.works__badge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: clamp(14px, 2vh, 22px);
+  padding: 5px 14px;
+  border: 1px solid rgba(34, 26, 51, 0.28);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: rgba(34, 26, 51, 0.55);
+}
+
+/* ---------- works grid — scattered 12-col editorial ---------- */
 .works__grid {
-  display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: clamp(24px, 4vw, 56px);
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0;
   align-items: start;
 }
-@media (max-width: 820px) {
-  .works__grid { grid-template-columns: 1fr; }
-  .work-card { transform: none !important; }
+
+/* Desktop card positions */
+@media (min-width: 900px) {
+  /* Card 1 — Ember Tide: wide landscape */
+  .work-card:nth-child(1) {
+    grid-column: 1 / span 7;
+  }
+  .work-card:nth-child(1) .work-card__frame {
+    aspect-ratio: 16 / 10;
+  }
+
+  /* Card 2 — Salt Cathedral: portrait, offset down */
+  .work-card:nth-child(2) {
+    grid-column: 9 / span 4;
+    margin-top: clamp(60px, 8vw, 140px);
+  }
+  .work-card:nth-child(2) .work-card__frame {
+    aspect-ratio: 4 / 5;
+  }
+
+  /* Card 3 — Midnight Bloom: square, offset down */
+  .work-card:nth-child(3) {
+    grid-column: 2 / span 4;
+    margin-top: clamp(48px, 6vw, 110px);
+  }
+  .work-card:nth-child(3) .work-card__frame {
+    aspect-ratio: 1 / 1;
+  }
+
+  /* Card 4 — Helios Drift: wide, slight offset */
+  .work-card:nth-child(4) {
+    grid-column: 7 / span 6;
+    margin-top: clamp(24px, 3vw, 60px);
+  }
+  .work-card:nth-child(4) .work-card__frame {
+    aspect-ratio: 16 / 10;
+  }
 }
 
-/* cards 1 & 4 → larger (4/3), cards 2 & 3 → square + offset down */
-.work-card:nth-child(1) .work-card__frame,
-.work-card:nth-child(4) .work-card__frame { aspect-ratio: 4 / 3; }
-.work-card:nth-child(2) .work-card__frame,
-.work-card:nth-child(3) .work-card__frame { aspect-ratio: 1 / 1; }
-
-@media (min-width: 821px) {
-  .work-card:nth-child(2),
-  .work-card:nth-child(3) { margin-top: clamp(32px, 5vw, 72px); }
+/* Mobile: full-width stacking */
+@media (max-width: 899px) {
+  .works__grid {
+    grid-template-columns: 1fr;
+    row-gap: 56px;
+  }
+  .work-card {
+    grid-column: 1 / -1 !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+  .work-card .work-card__frame {
+    aspect-ratio: 16 / 10;
+  }
 }
 
 /* scroll-reveal entrance */
@@ -117,8 +171,59 @@
 .work-card { transition-delay: var(--reveal-delay, 0s); }
 
 /* tilt hover overrides the reveal transform in JS — keep transition for tilt smooth */
+
+/* Blueprint corner-bracket wrapper sits outside the clipped frame */
+.work-card__frame-wrap {
+  position: relative;
+  display: block;
+}
+
+/* Four L-shaped corner brackets */
+.work-card__frame-wrap::before,
+.work-card__frame-wrap::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(34, 26, 51, 0.35);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 2;
+}
+.work-card__corner-tl,
+.work-card__corner-br {
+  display: block;
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: rgba(34, 26, 51, 0.35);
+  border-style: solid;
+  pointer-events: none;
+  z-index: 2;
+}
+/* top-right */
+.work-card__frame-wrap::before {
+  top: -6px; right: -6px;
+  border-width: 1px 1px 0 0;
+}
+/* bottom-left */
+.work-card__frame-wrap::after {
+  bottom: -6px; left: -6px;
+  border-width: 0 0 1px 1px;
+}
+/* top-left */
+.work-card__corner-tl {
+  top: -6px; left: -6px;
+  border-width: 1px 0 0 1px;
+}
+/* bottom-right */
+.work-card__corner-br {
+  bottom: -6px; right: -6px;
+  border-width: 0 1px 1px 0;
+}
+
 .work-card__frame {
-  position: relative; overflow: hidden; border-radius: 14px;
+  position: relative; overflow: hidden; border-radius: 6px;
   box-shadow: 0 24px 60px -24px rgba(34, 26, 51, 0.45);
 }
 .work-card__frame canvas { width: 100%; height: 100%; display: block; }
@@ -131,29 +236,38 @@
 }
 .work-card:hover .work-card__view { opacity: 0.95; transform: none; }
 .work-card__meta {
-  display: flex; align-items: baseline; gap: 16px;
-  flex-wrap: wrap;
-  margin-top: 18px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 0 2px;
 }
-.work-card__index {
-  font-family: var(--font-mono); font-size: 11px; color: #c4512f;
+/* REF label: "REF 001 — EMBER TIDE" */
+.work-card__ref {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  color: rgba(34, 26, 51, 0.65);
+  text-transform: uppercase;
 }
-.work-card__title {
-  font-size: clamp(20px, 2.2vw, 28px); font-weight: 480;
+.work-card__ref strong {
+  color: #c4512f;
+  font-weight: 500;
 }
-.work-card__desc {
-  width: 100%;
-  font-style: italic; font-size: clamp(13px, 1.2vw, 15px);
-  color: rgba(34, 26, 51, 0.55);
-  line-height: 1.5;
-  margin-top: 4px;
-}
+/* Year + medium, right-aligned */
 .work-card__info {
-  margin-left: auto;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
-  color: rgba(34, 26, 51, 0.55);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(34, 26, 51, 0.45);
   text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
+/* Hidden from card — available in data attr for lightbox */
+.work-card__title { display: none; }
+.work-card__index { display: none; }
 
 /* ---------- lightbox overlay ---------- */
 .lb-overlay {
@@ -233,47 +347,33 @@
   width: 100%;
 }
 
-/* --- display headline (outlined base, gradient fill on hover) ---
+/* --- display headline — gradient fill, always on, no word-split ---
  *
- * Technique: the gradient fill is always applied via background-clip:text.
- * The stroke starts opaque and transitions to transparent on hover,
- * "uncovering" the gradient underneath. Degrades to plain warm-white
- * in Firefox (no -webkit-text-stroke support).
- *
- * .w word-reveal spans are inline-block and inherit all webkit text props.
+ * Technique: gradient applied via background-clip:text on the h2 directly.
+ * Descender safety via line-height + padding-bottom so the clip never clips
+ * letters like p/g/y. Degrades to warm-white in Firefox.
  */
 .contact__display {
   font-size: clamp(64px, 11vw, 170px);
   font-weight: 380;
-  line-height: 0.95;
+  line-height: 1.05;
   letter-spacing: -0.02em;
   cursor: default;
-  /* Firefox fallback */
-  color: rgba(255, 246, 236, 0.55);
 }
 
-@supports (-webkit-text-stroke: 1px transparent) {
-  .contact__display {
-    color: transparent;
+/* Gradient clipped on an INLINE span: inline background boxes cover the full
+ * glyph ascent/descent per line, so descenders (the "p") don't get truncated
+ * the way block-level background-clip:text does in Chrome. */
+.contact__display-fill {
+  /* Firefox / no-support fallback */
+  color: rgba(255, 246, 236, 0.85);
+}
+@supports (-webkit-background-clip: text) {
+  .contact__display-fill {
     background: linear-gradient(135deg, var(--coral) 0%, var(--amber) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    -webkit-text-stroke: 1.5px rgba(255, 246, 236, 0.55);
-    transition: -webkit-text-stroke-color 0.5s ease;
-  }
-
-  .contact__display:hover {
-    -webkit-text-stroke-color: rgba(255, 246, 236, 0);
-  }
-
-  /* Word-reveal .w spans inherit stroke and background-clip */
-  [data-reveal-words].contact__display .w {
-    background: inherit;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: inherit;
-    -webkit-text-stroke: inherit;
   }
 }
 

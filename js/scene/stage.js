@@ -50,6 +50,11 @@ export const createStage = async (canvas, { onProgress } = {}) => {
   fill.position.set(6, 9, 22);
   scene.add(fill);
 
+  // Cursor-following warm point light — mimics a soft glow tracking the mouse.
+  const cursorLight = new THREE.PointLight("#ffd9a8", 0, 16, 1.8);
+  cursorLight.position.set(0, 3, 5);
+  scene.add(cursorLight);
+
   const sky = createSky(scene);
   const ocean = createOcean(scene, quality);
   const atmosphere = createAtmosphere(scene, quality);
@@ -62,9 +67,11 @@ export const createStage = async (canvas, { onProgress } = {}) => {
 
   // Mouse parallax (lerped for weight) + velocity for pushing letters around.
   const pointer = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, lastTx: 0 };
+  let pointerActive = false;
   const onPointerMove = (e) => {
     pointer.tx = (e.clientX / window.innerWidth) * 2 - 1;
     pointer.ty = (e.clientY / window.innerHeight) * 2 - 1;
+    pointerActive = true;
   };
   window.addEventListener("pointermove", onPointerMove, { passive: true });
 
@@ -96,6 +103,11 @@ export const createStage = async (canvas, { onProgress } = {}) => {
   let running = true;
 
   const lookTarget = new THREE.Vector3();
+
+  // Reusable vectors for cursor-light unprojection — allocated once, never re-created.
+  const _lightNdc = new THREE.Vector3();
+  const _lightDir = new THREE.Vector3();
+
   const renderFrame = () => {
     if (!running) return;
     const t = clock.getElapsedTime();
@@ -125,6 +137,16 @@ export const createStage = async (canvas, { onProgress } = {}) => {
 
     // Dusk falls with scroll: global exposure eases down as the sun sets.
     renderer.toneMappingExposure = 1.05 - p * 0.38;
+
+    // Cursor light: unproject smoothed NDC onto the z = 2.5 plane in front of letters.
+    _lightNdc.set(pointer.x, -pointer.y, 0.5).unproject(camera);
+    _lightDir.copy(_lightNdc).sub(camera.position).normalize();
+    const _lt = (2.5 - camera.position.z) / _lightDir.z;
+    cursorLight.position.copy(camera.position).addScaledVector(_lightDir, _lt);
+    cursorLight.position.y = Math.max(cursorLight.position.y, 0.6);
+    const cursorTargetIntensity = pointerActive ? 2.2 * (1 - p) : 0;
+    cursorLight.intensity +=
+      (cursorTargetIntensity - cursorLight.intensity) * 0.06;
 
     sky.update(t, p);
     ocean.update(t, p);
