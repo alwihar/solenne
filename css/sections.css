@@ -41,6 +41,8 @@
 .manifesto__deco--cross  { top: 52%;  right: 2%; font-size: 22px; }
 .manifesto__deco--fig-ii { bottom: 22%; left: 48%; }
 @media (max-width: 899px) {
+  /* FIG. I collides with the kicker in the single-column layout */
+  .manifesto__deco--fig-i { display: none; }
   .manifesto__deco--fig-ii { display: none; }
 }
 
